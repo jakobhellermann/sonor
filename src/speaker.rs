@@ -1,4 +1,5 @@
 use std::net::Ipv4Addr;
+use std::num::NonZeroUsize;
 use std::time::Duration;
 
 use xmltree::Element;
@@ -35,7 +36,7 @@ pub async fn discover(timeout: u8) -> Result<Vec<Speaker>, upnp::Error> {
     .collect())
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub enum RepeatMode {
     NONE,
     ONE,
@@ -112,7 +113,7 @@ impl Speaker {
 
         Ok((repeat, shuffle, crossfade))
     }
-    pub async fn seek_track(&self, track: usize) -> Result<(), upnp::Error> {
+    pub async fn seek_track(&self, track: NonZeroUsize) -> Result<(), upnp::Error> {
         let avtransport = self.avtransport();
         await!(avtransport.seek(0, SeekMode::TRACK_NR, track.to_string()))
     }
