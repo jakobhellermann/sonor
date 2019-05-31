@@ -1,36 +1,25 @@
-#![feature(async_await, await_macro, futures_api)]
-#![allow(unused)]
+#![feature(async_await, await_macro)]
+#![recursion_limit = "128"]
 
 use sonos::Speaker;
-use upnp::Device;
 
-use futures::prelude::*;
+#[runtime::main(runtime_tokio::Tokio)]
+async fn main() -> Result<(), failure::Error> {
+    let player = Speaker::from_ip([192, 168, 2, 49].into())
+        .await?
+        .expect("ip is sonos device");
 
-use std::net::Ipv4Addr;
-
-fn main() {
-    tokio::run(
-        async_main()
-            .map_err(|e| eprintln!("{}", e))
-            .boxed()
-            .compat(),
-    );
-}
-
-async fn async_main() -> Result<(), failure::Error> {
-    let player: Speaker = await!(Speaker::from_ip(Ipv4Addr::new(192, 168, 2, 49)))?.unwrap();
-
-    let name = await!(player.get_name())?;
+    let name = player.get_name().await?;
     println!("- Name: {}", name);
 
-    let track_info = await!(player.track())?;
+    let track_info = player.track().await?;
     if let Some(track_info) = track_info {
         println!("- Currently playing '{}'", track_info.track());
     } else {
         println!("- No track currently playing");
     }
 
-    let queue = await!(player.get_queue())?;
+    let queue = player.get_queue().await?;
     println!(
         "- {} track{}in queue",
         queue.len(),

@@ -61,15 +61,18 @@ impl TrackInfo {
 #[get = "pub"]
 pub struct Track {
     title: String,
-    creator: String,
+    creator: Option<String>,
     album: Option<String>,
-    duration: Duration,
+    duration: Option<Duration>,
     res: String,
 }
 
 impl std::fmt::Display for Track {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{} - {}", &self.title, &self.creator)?;
+        write!(f, "{}", &self.title)?;
+        if let Some(creator) = &self.creator {
+            write!(f, " - {}", creator)?;
+        }
         if let Some(album) = &self.album {
             write!(f, " ({})", album)?;
         }
@@ -87,13 +90,15 @@ fn text_or_none(elem: Option<Element>) -> Option<String> {
 impl Track {
     pub(crate) fn from_xml(mut item: Element) -> Option<Self> {
         let title = item.take_child("title")?.text?;
-        let creator = item.take_child("creator")?.text?;
+        let creator = text_or_none(item.take_child("creator"));
         let album = text_or_none(item.take_child("album"));
         let (res, duration) = {
             let mut res = item.take_child("res")?;
-            let duration = res.attributes.remove("duration")?;
-
-            (res.text?, duration_from_str(&duration)?)
+            let duration = match res.attributes.remove("duration") {
+                Some(duration) => Some(duration_from_str(&duration)?),
+                None => None,
+            };
+            (res.text?, duration)
         };
 
         Some(Track {

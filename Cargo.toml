@@ -5,17 +5,17 @@ authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 edition = "2018"
 
 [dependencies]
-tokio = "0.1"
-failure = "0.1"
-futures-preview = "0.3.0-alpha.13"
-hyper = "0.12"
+futures-preview = { version = "0.3.0-alpha.16", features = ["io-compat"] }
+tokio = "0.1.20"
+hyper = "0.12.29"
+failure = "0.1.5"
 marksman_escape = "0.1.2"
-serde = { version = "1.0", features = ["derive"] }
 xmltree = "0.8.0"
 getset = "0.0.7"
+serde = { version = "1.0.91", features = ["derive"] }
+upnp = { path = "../upnp" }
+upnp_zoneplayer1 = { path = "../upnp_zoneplayer1" }
 
-[dependencies.upnp]
-path = "../upnp"
-
-[dependencies.upnp_zoneplayer1]
-path = "../upnp_zoneplayer1"
+[dev-dependencies]
+runtime = "0.3.0-alpha.4"
+runtime-tokio = "0.3.0-alpha.4"
