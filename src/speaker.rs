@@ -6,9 +6,8 @@ use xmltree::Element;
 
 use crate::{RepeatMode, SpeakerInfo};
 use upnp::discovery;
-use upnp::ssdp::{header::ST, FieldMap};
+use upnp::ssdp::SearchTarget;
 use upnp::Device;
-
 use upnp_zoneplayer1::avtransport1::{
     AVTransport1, CurrentPlayMode as PlayMode, SeekMode, TransportPlaySpeed, TransportState,
 };
@@ -27,9 +26,9 @@ pub struct Speaker {
     device: upnp::Device,
 }
 
-pub async fn discover(timeout: u8) -> Result<Vec<Speaker>, upnp::Error> {
+pub async fn discover(timeout: Duration) -> Result<Vec<Speaker>, upnp::Error> {
     Ok(
-        discovery::discover(ST::Target(FieldMap::URN(SONOS_URN.to_string())), timeout)
+        discovery::discover(SearchTarget::URN(SONOS_URN), timeout)
             .await?
             .into_iter()
             .map(|device| {
@@ -196,21 +195,18 @@ impl Speaker {
     }
 
     // RENDERINGCONTROL
-    // action![rendering_control, set_volume, (0, Channel::Master, #volume: i16)
     pub async fn set_volume(&self, volume: u16) -> Result<(), upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control
             .set_volume(0, Channel::Master, volume)
             .await
     }
-    // action![rendering_control, set_volume_relative, (0, Channel::Master, #adjustment: i16)
     pub async fn set_volume_relative(&self, adjustment: i32) -> Result<u16, upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control
             .set_relative_volume(0, Channel::Master, adjustment)
             .await
     }
-    // action![rendering_control1, get_volume, (0, Channel::Master) -> u16]
     pub async fn get_volume(&self) -> Result<u16, upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control.get_volume(0, Channel::Master).await
