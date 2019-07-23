@@ -1,25 +1,28 @@
-use std::net::Ipv4Addr;
-use std::num::NonZeroUsize;
-use std::time::Duration;
-
+use crate::{
+    track::{self, duration_from_str, Track, TrackInfo},
+    RepeatMode, SpeakerInfo,
+};
+use std::{borrow::Cow, net::Ipv4Addr, num::NonZeroUsize, time::Duration};
+use upnp::{
+    ssdp_client::search::{SearchTarget, URNType, URN},
+    Device,
+};
+use upnp_zoneplayer1::{
+    avtransport1::{AVTransport1, CurrentPlayMode, SeekMode, TransportPlaySpeed, TransportState},
+    deviceproperties1::DeviceProperties1,
+    grouprenderingcontrol1::GroupRenderingControl1,
+    queue1::Queue1,
+    renderingcontrol1::{Channel, MuteChannel, RenderingControl1},
+    zonegrouptopology1::ZoneGroupTopology1,
+};
 use xmltree::Element;
 
-use crate::{RepeatMode, SpeakerInfo};
-use upnp::discovery;
-use upnp::ssdp::SearchTarget;
-use upnp::Device;
-use upnp_zoneplayer1::avtransport1::{
-    AVTransport1, CurrentPlayMode as PlayMode, SeekMode, TransportPlaySpeed, TransportState,
+const SONOS_URN: URN<'static> = URN {
+    domain: Cow::Borrowed("schemas-sonos-com"),
+    urn_type: URNType::Device,
+    type_: Cow::Borrowed("ZonePlayer"),
+    version: 1,
 };
-use upnp_zoneplayer1::deviceproperties1::DeviceProperties1;
-use upnp_zoneplayer1::renderingcontrol1::{Channel, MuteChannel, RenderingControl1};
-use upnp_zoneplayer1::GroupRenderingControl1;
-use upnp_zoneplayer1::Queue1;
-use upnp_zoneplayer1::ZoneGroupTopology1;
-
-use crate::track::{self, duration_from_str, Track, TrackInfo};
-
-const SONOS_URN: &str = "schemas-upnp-org:device:ZonePlayer:1";
 
 #[derive(Debug)]
 pub struct Speaker {
@@ -27,27 +30,25 @@ pub struct Speaker {
 }
 
 pub async fn discover(timeout: Duration) -> Result<Vec<Speaker>, upnp::Error> {
-    Ok(
-        discovery::discover(SearchTarget::URN(SONOS_URN), timeout)
-            .await?
-            .into_iter()
-            .map(|device| {
-                Speaker::from_device(device).expect("searched for sonos urn but got something else")
-            })
-            .collect(),
-    )
+    Ok(upnp::discover(SearchTarget::URN(SONOS_URN), timeout)
+        .await?
+        .into_iter()
+        .map(|device| {
+            Speaker::from_device(device).expect("searched for sonos urn but got something else")
+        })
+        .collect())
 }
 
 impl Speaker {
     pub fn from_device(device: Device) -> Option<Self> {
-        if device.device_type().ends_with(SONOS_URN) {
+        if device.description().device_type() == &SONOS_URN {
             Some(Self { device })
         } else {
             None
         }
     }
     pub async fn from_ip(addr: Ipv4Addr) -> Result<Option<Self>, upnp::Error> {
-        let uri: hyper::Uri = format!("http://{}:1400/xml/device_description.xml", addr)
+        let uri = format!("http://{}:1400/xml/device_description.xml", addr)
             .parse()
             .expect("is always valid");
 
@@ -57,27 +58,27 @@ impl Speaker {
     // SERVICES
     fn rendering_control(&self) -> RenderingControl1 {
         RenderingControl1::from_device(&self.device)
-            .expect("sonos device does not have a RenderingControl1 service")
+            .expect("sonos device should have a RenderingControl1 service")
     }
     fn queue(&self) -> Queue1 {
-        Queue1::from_device(&self.device).expect("sonos device does not have a Queue1 service")
+        Queue1::from_device(&self.device).expect("sonos device should have a Queue1 service")
     }
     fn avtransport(&self) -> AVTransport1 {
         AVTransport1::from_device(&self.device)
-            .expect("sonos device does not have a AVTransport1 service")
+            .expect("sonos device should have a AVTransport1 service")
     }
     fn deviceproperties(&self) -> DeviceProperties1 {
         DeviceProperties1::from_device(&self.device)
-            .expect("sonos device does not have a DeviceProperties1 service")
+            .expect("sonos device should have a DeviceProperties1 service")
     }
     #[allow(unused)]
     fn grouprenderingcontrol(&self) -> GroupRenderingControl1 {
         GroupRenderingControl1::from_device(&self.device)
-            .expect("sonos device does not have a GroupRenderingControl1 servive")
+            .expect("sonos device should have a GroupRenderingControl1 service")
     }
     fn zonegrouptopology(&self) -> ZoneGroupTopology1 {
         ZoneGroupTopology1::from_device(&self.device)
-            .expect("sonos device does not have a ZoneGroupTopology1 servive")
+            .expect("sonos device should have a ZoneGroupTopology1 service")
     }
 
     // AVTRANSPORT
@@ -109,12 +110,12 @@ impl Speaker {
         let (play_mode, _) = avtransport.get_transport_settings(0).await?;
 
         let (repeat, shuffle) = match play_mode {
-            PlayMode::NORMAL => (RepeatMode::NONE, false),
-            PlayMode::REPEAT_ALL => (RepeatMode::ALL, false),
-            PlayMode::REPEAT_ONE => (RepeatMode::ONE, false),
-            PlayMode::SHUFFLE_NOREPEAT => (RepeatMode::NONE, true),
-            PlayMode::SHUFFLE => (RepeatMode::ALL, true),
-            PlayMode::SHUFFLE_REPEAT_ONE => (RepeatMode::ONE, true),
+            CurrentPlayMode::NORMAL => (RepeatMode::NONE, false),
+            CurrentPlayMode::REPEAT_ALL => (RepeatMode::ALL, false),
+            CurrentPlayMode::REPEAT_ONE => (RepeatMode::ONE, false),
+            CurrentPlayMode::SHUFFLE_NOREPEAT => (RepeatMode::NONE, true),
+            CurrentPlayMode::SHUFFLE => (RepeatMode::ALL, true),
+            CurrentPlayMode::SHUFFLE_REPEAT_ONE => (RepeatMode::ONE, true),
         };
 
         Ok((repeat, shuffle))
@@ -126,12 +127,12 @@ impl Speaker {
     ) -> Result<(), upnp::Error> {
         let avtransport = self.avtransport();
         let playmode = match (repeat, shuffle) {
-            (RepeatMode::NONE, false) => PlayMode::NORMAL,
-            (RepeatMode::ONE, false) => PlayMode::REPEAT_ONE,
-            (RepeatMode::ALL, false) => PlayMode::REPEAT_ALL,
-            (RepeatMode::NONE, true) => PlayMode::SHUFFLE_NOREPEAT,
-            (RepeatMode::ONE, true) => PlayMode::SHUFFLE_REPEAT_ONE,
-            (RepeatMode::ALL, true) => PlayMode::SHUFFLE,
+            (RepeatMode::NONE, false) => CurrentPlayMode::NORMAL,
+            (RepeatMode::ONE, false) => CurrentPlayMode::REPEAT_ONE,
+            (RepeatMode::ALL, false) => CurrentPlayMode::REPEAT_ALL,
+            (RepeatMode::NONE, true) => CurrentPlayMode::SHUFFLE_NOREPEAT,
+            (RepeatMode::ONE, true) => CurrentPlayMode::SHUFFLE_REPEAT_ONE,
+            (RepeatMode::ALL, true) => CurrentPlayMode::SHUFFLE,
         };
         avtransport.set_play_mode(0, playmode).await
     }
@@ -188,9 +189,9 @@ impl Speaker {
                     return Ok(Some(TrackInfo::new(track, track_no, duration, played)));
                 }
             }
-            return Err(upnp::Error::ParseError);
+            Err(upnp::Error::ParseError)
         } else {
-            return Ok(None);
+            Ok(None)
         }
     }
 

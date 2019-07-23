@@ -1,11 +1,10 @@
-#![feature(async_await, await_macro)]
-#![recursion_limit = "128"]
+#![feature(async_await)]
 
 use sonos::Speaker;
 
-#[runtime::main(runtime_tokio::Tokio)]
+#[tokio::main]
 async fn main() -> Result<(), failure::Error> {
-    let player = Speaker::from_ip([192, 168, 2, 49].into())
+    let player = Speaker::from_ip([192, 168, 2, 29].into())
         .await?
         .expect("ip is sonos device");
 

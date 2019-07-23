@@ -3,7 +3,7 @@
 
 use std::time::Duration;
 
-#[runtime::main(runtime_tokio::Tokio)]
+#[tokio::main]
 async fn main() -> Result<(), failure::Error> {
     for player in sonos::discover(Duration::from_secs(1)).await? {
         println!("{}", player.get_name().await?);
