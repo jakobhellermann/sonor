@@ -60,7 +60,7 @@ impl Speaker {
         RenderingControl1::from_device(&self.device)
             .expect("sonos device should have a RenderingControl1 service")
     }
-    fn queue(&self) -> Queue1 {
+    fn queue_service(&self) -> Queue1 {
         Queue1::from_device(&self.device).expect("sonos device should have a Queue1 service")
     }
     fn avtransport(&self) -> AVTransport1 {
@@ -82,7 +82,6 @@ impl Speaker {
     }
 
     // AVTRANSPORT
-    // action![avtransport, (0, TransportPlaySpeed::_1)]
     pub async fn play(&self) -> Result<(), upnp::Error> {
         let avtransport = self.avtransport();
         avtransport.play(0, TransportPlaySpeed::_1).await
@@ -208,12 +207,12 @@ impl Speaker {
             .set_relative_volume(0, Channel::Master, adjustment)
             .await
     }
-    pub async fn get_volume(&self) -> Result<u16, upnp::Error> {
+    pub async fn volume(&self) -> Result<u16, upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control.get_volume(0, Channel::Master).await
     }
 
-    pub async fn get_mute(&self) -> Result<bool, upnp::Error> {
+    pub async fn mute(&self) -> Result<bool, upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control
             .get_mute(0, MuteChannel::Master)
@@ -231,7 +230,7 @@ impl Speaker {
         let rendering_control = self.rendering_control();
         rendering_control.set_bass(0, bass).await
     }
-    pub async fn get_bass(&self) -> Result<i16, upnp::Error> {
+    pub async fn bass(&self) -> Result<i16, upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control.get_bass(0).await
     }
@@ -239,7 +238,7 @@ impl Speaker {
         let rendering_control = self.rendering_control();
         rendering_control.set_treble(0, treble).await
     }
-    pub async fn get_treble(&self) -> Result<i16, upnp::Error> {
+    pub async fn treble(&self) -> Result<i16, upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control.get_treble(0).await
     }
@@ -249,7 +248,7 @@ impl Speaker {
             .set_loudness(0, Channel::Master, loudness.into())
             .await
     }
-    pub async fn get_loudness(&self) -> Result<bool, upnp::Error> {
+    pub async fn loudness(&self) -> Result<bool, upnp::Error> {
         let rendering_control = self.rendering_control();
         rendering_control
             .get_loudness(0, Channel::Master)
@@ -258,7 +257,7 @@ impl Speaker {
     }
 
     // DEVICEPROPERTIES
-    pub async fn get_name(&self) -> Result<String, upnp::Error> {
+    pub async fn name(&self) -> Result<String, upnp::Error> {
         let deviceproperties = self.deviceproperties();
         let (name, _, _) = deviceproperties.get_zone_attributes().await?;
         Ok(name)
@@ -306,8 +305,8 @@ impl Speaker {
     }
 
     // QUEUE
-    pub async fn get_queue(&self) -> Result<Vec<Track>, upnp::Error> {
-        let queue_svc = self.queue();
+    pub async fn queue(&self) -> Result<Vec<Track>, upnp::Error> {
+        let queue_svc = self.queue_service();
         let (result, _number_returned, _total_matches, _update_id) =
             queue_svc.browse(0, 0, std::u32::MAX).await?;
 
