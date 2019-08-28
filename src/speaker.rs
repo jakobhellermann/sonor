@@ -2,6 +2,7 @@ use crate::{
     track::{self, duration_from_str, Track, TrackInfo},
     RepeatMode, SpeakerInfo,
 };
+use futures::prelude::*;
 use std::{borrow::Cow, net::Ipv4Addr, num::NonZeroUsize, time::Duration};
 use upnp::{
     ssdp_client::search::{SearchTarget, URNType, URN},
@@ -29,14 +30,14 @@ pub struct Speaker {
     device: upnp::Device,
 }
 
-pub async fn discover(timeout: Duration) -> Result<Vec<Speaker>, upnp::Error> {
+pub async fn discover(
+    timeout: Duration,
+) -> Result<impl Stream<Item = Result<Speaker, upnp::Error>>, upnp::Error> {
     Ok(upnp::discover(SearchTarget::URN(SONOS_URN), timeout)
         .await?
-        .into_iter()
-        .map(|device| {
+        .map_ok(|device| {
             Speaker::from_device(device).expect("searched for sonos urn but got something else")
-        })
-        .collect())
+        }))
 }
 
 impl Speaker {
