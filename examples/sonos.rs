@@ -1,9 +1,7 @@
-#![feature(async_await)]
-
 use sonos::Speaker;
 
 #[tokio::main]
-async fn main() -> Result<(), failure::Error> {
+async fn main() -> Result<(), sonos::upnp::Error> {
     let player = Speaker::from_ip([192, 168, 2, 29].into())
         .await?
         .expect("ip is sonos device");
@@ -28,6 +26,11 @@ async fn main() -> Result<(), failure::Error> {
         println!("  - {}", track);
     }
     println!("  - ...");
+
+    println!("eq:");
+    println!(" - bass: {}", player.get_bass().await?);
+    println!(" - treble: {}", player.get_treble().await?);
+    println!(" - loudness: {}", player.get_loudness().await?);
 
     Ok(())
 }

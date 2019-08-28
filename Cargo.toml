@@ -5,14 +5,13 @@ authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 edition = "2018"
 
 [dependencies]
-futures-preview = { version = "0.3.0-alpha.17", features = ["io-compat"] }
-failure = "0.1.5"
-marksman_escape = "0.1.2"
-xmltree = "0.8.0"
-getset = "0.0.7"
-serde = { version = "1.0.94", features = ["derive"] }
 upnp = { path = "../upnp" }
 upnp-zoneplayer1 = { path = "../upnp-zoneplayer1" }
+futures-preview = "0.3.0-alpha.18"
+xmltree = "0.8.0"
+marksman_escape = "0.1.2"
+getset = "0.0.7"
+serde = { version = "1.0.99", features = ["derive"] }
 
 [dev-dependencies]
-tokio = { git = "https://github.com/tokio-rs/tokio" }
+tokio = "0.2.0-alpha.2"

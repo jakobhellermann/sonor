@@ -18,7 +18,7 @@ use upnp_zoneplayer1::{
 use xmltree::Element;
 
 const SONOS_URN: URN<'static> = URN {
-    domain: Cow::Borrowed("schemas-sonos-com"),
+    domain: Cow::Borrowed("schemas-upnp-org"),
     urn_type: URNType::Device,
     type_: Cow::Borrowed("ZonePlayer"),
     version: 1,
