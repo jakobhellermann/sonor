@@ -1,17 +1,19 @@
-use serde::{Deserialize, Serialize};
-use xmltree::Element;
+use std::fmt;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub enum RepeatMode {
-    NONE,
-    ONE,
-    ALL,
+    None,
+    One,
+    All,
+}
+impl fmt::Display for RepeatMode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
 }
 
 #[derive(Debug)]
-pub struct ParseRepeatModeError {
-    _priv: (),
-}
+pub struct ParseRepeatModeError;
 impl std::error::Error for ParseRepeatModeError {}
 impl std::fmt::Display for ParseRepeatModeError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -24,15 +26,15 @@ impl std::str::FromStr for RepeatMode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_ref() {
-            "none" => Ok(RepeatMode::NONE),
-            "one" => Ok(RepeatMode::ONE),
-            "all" => Ok(RepeatMode::ALL),
-            _ => Err(ParseRepeatModeError { _priv: () }),
+            "none" => Ok(RepeatMode::None),
+            "one" => Ok(RepeatMode::One),
+            "all" => Ok(RepeatMode::All),
+            _ => Err(ParseRepeatModeError),
         }
     }
 }
-
-#[derive(Debug, Serialize)]
+/*
+#[derive(Debug)]
 pub struct SpeakerInfo {
     room_name: String,
     uuid: String,
@@ -40,7 +42,7 @@ pub struct SpeakerInfo {
     coordinator: bool,
 }
 impl SpeakerInfo {
-    pub(crate) fn from_xml(mut zone: Element, coordinator_uuid: &String) -> Option<Self> {
+    /*pub(crate) fn from_xml(mut zone: Element, coordinator_uuid: &String) -> Option<Self> {
         let room_name = zone.attributes.remove("ZoneName")?;
         let uuid = zone.attributes.remove("UUID")?;
         let location = zone.attributes.remove("Location")?;
@@ -50,7 +52,7 @@ impl SpeakerInfo {
             uuid,
             location,
         })
-    }
+    }*/
 
     pub fn room_name(&self) -> &String {
         &self.room_name
@@ -64,4 +66,4 @@ impl SpeakerInfo {
     pub fn coordinator(&self) -> bool {
         self.coordinator
     }
-}
+}*/

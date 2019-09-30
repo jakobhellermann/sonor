@@ -1,22 +1,27 @@
 use sonos::Speaker;
 
-#[tokio::main]
-async fn main() -> Result<(), sonos::upnp::Error> {
-    let player = Speaker::from_ip([192, 168, 2, 29].into())
+fn main() {
+    if let Err(e) = async_std::task::block_on(sonos()) {
+        eprintln!("{}", e);
+    }
+}
+
+async fn sonos() -> Result<(), sonos::upnp::Error> {
+    let speaker = Speaker::from_ip([192, 168, 2, 49].into())
         .await?
         .expect("ip is sonos device");
 
-    let name = player.get_name().await?;
+    let name = speaker.name().await?;
     println!("- Name: {}", name);
 
-    let track_info = player.track().await?;
+    let track_info = speaker.track().await?;
     if let Some(track_info) = track_info {
         println!("- Currently playing '{}'", track_info.track());
     } else {
         println!("- No track currently playing");
     }
 
-    let queue = player.get_queue().await?;
+    let queue = speaker.queue().await?;
     println!(
         "- {} track{}in queue",
         queue.len(),
@@ -26,11 +31,6 @@ async fn main() -> Result<(), sonos::upnp::Error> {
         println!("  - {}", track);
     }
     println!("  - ...");
-
-    println!("eq:");
-    println!(" - bass: {}", player.get_bass().await?);
-    println!(" - treble: {}", player.get_treble().await?);
-    println!(" - loudness: {}", player.get_loudness().await?);
 
     Ok(())
 }

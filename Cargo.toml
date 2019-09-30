@@ -6,12 +6,9 @@ edition = "2018"
 
 [dependencies]
 upnp = { path = "../upnp" }
-upnp-zoneplayer1 = { path = "../upnp-zoneplayer1" }
 futures-preview = "0.3.0-alpha.18"
-xmltree = "0.8.0"
 marksman_escape = "0.1.2"
-getset = "0.0.7"
-serde = { version = "1.0.99", features = ["derive"] }
+roxmltree = "0.7"
 
 [dev-dependencies]
-tokio = "0.2.0-alpha.2"
+async-std = "0.99.8"

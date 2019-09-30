@@ -1,30 +1,5 @@
-use getset::Getters;
+use roxmltree::Node;
 use std::time::Duration;
-use xmltree::Element;
-
-const SECS_PER_MINUTE: u64 = 60;
-const MINS_PER_HOUR: u64 = 60;
-const SECS_PER_HOUR: u64 = 3600;
-
-pub(crate) fn duration_from_str(s: &str) -> Option<Duration> {
-    let mut split = s.splitn(3, ':');
-    let hours = split.next()?.parse::<u64>().ok()?;
-    let minutes = split.next()?.parse::<u64>().ok()?;
-    let seconds = split.next()?.parse::<u64>().ok()?;
-
-    Some(Duration::from_secs(
-        hours * SECS_PER_HOUR + minutes * SECS_PER_MINUTE + seconds,
-    ))
-}
-pub(crate) fn duration_to_str(duration: &Duration) -> String {
-    let seconds_total = duration.as_secs();
-
-    let seconds = seconds_total % SECS_PER_MINUTE;
-    let minutes = (seconds_total / SECS_PER_MINUTE) % MINS_PER_HOUR;
-    let hours = seconds_total / SECS_PER_HOUR;
-
-    return format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
-}
 
 #[derive(Debug)]
 pub struct TrackInfo {
@@ -57,14 +32,13 @@ impl TrackInfo {
     }
 }
 
-#[derive(Debug, Getters)]
-#[get = "pub"]
+#[derive(Debug)]
 pub struct Track {
     title: String,
     creator: Option<String>,
     album: Option<String>,
     duration: Option<Duration>,
-    res: String,
+    uri: String,
 }
 
 impl std::fmt::Display for Track {
@@ -80,33 +54,43 @@ impl std::fmt::Display for Track {
     }
 }
 
-fn text_or_none(elem: Option<Element>) -> Option<String> {
-    match elem {
-        Some(x) => Some(x.text?),
-        None => None,
-    }
-}
-
 impl Track {
-    pub(crate) fn from_xml(mut item: Element) -> Option<Self> {
-        let title = item.take_child("title")?.text?;
-        let creator = text_or_none(item.take_child("creator"));
-        let album = text_or_none(item.take_child("album"));
-        let (res, duration) = {
-            let mut res = item.take_child("res")?;
-            let duration = match res.attributes.remove("duration") {
-                Some(duration) => Some(duration_from_str(&duration)?),
-                None => None,
-            };
-            (res.text?, duration)
-        };
+    pub(crate) fn from_xml(node: Node) -> Result<Self, upnp::Error> {
+        let mut title = None;
+        let mut creator = None;
+        let mut album = None;
+        let mut res = None;
 
-        Some(Track {
+        for child in node.children() {
+            match child.tag_name().name() {
+                "title" => title = Some(crate::parse_node_text(child)?),
+                "creator" => creator = Some(crate::parse_node_text(child)?),
+                "album" => album = Some(crate::parse_node_text(child)?),
+                "res" => res = Some(child),
+                _ => (),
+            }
+        }
+
+        let title = title.ok_or_else(|| {
+            upnp::Error::XMLMissingElement(node.tag_name().name().to_string(), "title".to_string())
+        })?;
+        let res = res.ok_or_else(|| {
+            upnp::Error::XMLMissingElement(node.tag_name().name().to_string(), "res".to_string())
+        })?;
+        let duration = res
+            .attributes()
+            .iter()
+            .find(|a| a.name() == "duration")
+            .and_then(|a| crate::duration_from_str(a.value()));
+
+        let uri = crate::parse_node_text(res)?;
+
+        Ok(Self {
             title,
             creator,
             album,
-            res,
             duration,
+            uri,
         })
     }
 }
