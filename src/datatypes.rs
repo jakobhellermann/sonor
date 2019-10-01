@@ -1,3 +1,4 @@
+use roxmltree::Node;
 use std::fmt;
 
 #[derive(Debug)]
@@ -33,26 +34,55 @@ impl std::str::FromStr for RepeatMode {
         }
     }
 }
-/*
-#[derive(Debug)]
+
+#[derive(Debug, Eq, Hash)]
 pub struct SpeakerInfo {
     room_name: String,
     uuid: String,
     location: String,
-    coordinator: bool,
 }
+impl std::cmp::PartialEq for SpeakerInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.uuid() == other.uuid()
+    }
+}
+
 impl SpeakerInfo {
-    /*pub(crate) fn from_xml(mut zone: Element, coordinator_uuid: &String) -> Option<Self> {
-        let room_name = zone.attributes.remove("ZoneName")?;
-        let uuid = zone.attributes.remove("UUID")?;
-        let location = zone.attributes.remove("Location")?;
-        Some(Self {
-            coordinator: coordinator_uuid == &uuid,
-            room_name,
-            uuid,
-            location,
+    pub(crate) fn from_xml(node: Node) -> Result<Self, upnp::Error> {
+        let mut uuid = None;
+        let mut room_name = None;
+        let mut location = None;
+
+        for attr in node.attributes() {
+            match attr.name().to_lowercase().as_str() {
+                "uuid" => uuid = Some(attr.value()),
+                "location" => location = Some(attr.value()),
+                "zonename" => room_name = Some(attr.value()),
+                _ => (),
+            }
+        }
+
+        Ok(Self {
+            room_name: room_name
+                .ok_or(upnp::Error::XMLMissingElement(
+                    "RoomName".to_string(),
+                    "ZoneGroupMember".to_string(),
+                ))?
+                .to_string(),
+            uuid: uuid
+                .ok_or(upnp::Error::XMLMissingElement(
+                    "RoomName".to_string(),
+                    "ZoneGroupMember".to_string(),
+                ))?
+                .to_string(),
+            location: location
+                .ok_or(upnp::Error::XMLMissingElement(
+                    "RoomName".to_string(),
+                    "ZoneGroupMember".to_string(),
+                ))?
+                .to_string(),
         })
-    }*/
+    }
 
     pub fn room_name(&self) -> &String {
         &self.room_name
@@ -63,7 +93,4 @@ impl SpeakerInfo {
     pub fn location(&self) -> &String {
         &self.location
     }
-    pub fn coordinator(&self) -> bool {
-        self.coordinator
-    }
-}*/
+}

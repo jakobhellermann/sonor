@@ -1,14 +1,18 @@
-use crate::track::{Track, TrackInfo};
-use crate::{duration_to_str, parse_bool, HashMapExt, RepeatMode};
+use crate::utils::{self, HashMapExt};
+use crate::{args, upnp_action};
+use crate::{
+    track::{Track, TrackInfo},
+    RepeatMode, SpeakerInfo,
+};
 use futures::prelude::*;
-use roxmltree::Document;
-use std::{net::Ipv4Addr, time::Duration};
+use roxmltree::{Document, Node};
+use std::{collections::HashMap, net::Ipv4Addr, time::Duration};
 use upnp::{
     ssdp_client::search::{SearchTarget, URN},
     Device,
 };
 
-const SONOS_URN: URN<'static> = URN::device("schemas-upnp-org", "ZonePlayer", 1);
+const SONOS_URN: URN = URN::device("schemas-upnp-org", "ZonePlayer", 1);
 
 #[derive(Debug)]
 pub struct Speaker(upnp::Device);
@@ -16,44 +20,11 @@ pub struct Speaker(upnp::Device);
 pub async fn discover(
     timeout: Duration,
 ) -> Result<impl Stream<Item = Result<Speaker, upnp::Error>>, upnp::Error> {
-    Ok(upnp::discover(SearchTarget::URN(SONOS_URN), timeout)
+    Ok(upnp::discover(&SearchTarget::URN(SONOS_URN), timeout)
         .await?
         .map_ok(|device| {
             Speaker::from_device(device).expect("searched for sonos urn but got something else")
         }))
-}
-
-macro_rules! upnp_action {
-    ( $self:expr, $service:ident:$version:literal/$action:ident, $args:expr ) => {
-        $self
-            .0
-            .find_service(&URN::service(
-                "schemas-upnp-org",
-                stringify!($service),
-                $version,
-            ))
-            .expect(concat!(
-                "sonos device doesn't have a ",
-                stringify!($service),
-                ':',
-                $version,
-                " service"
-            ))
-            .action($self.0.url(), stringify!($action), $args)
-            .await
-    };
-}
-
-macro_rules! args {
-    ( $( $var:literal: $e:expr ),* ) => { &{
-        let mut s = String::new();
-        $(
-            s.push_str(concat!("<", $var, ">"));
-            s.push_str(&$e.to_string());
-            s.push_str(concat!("</", $var, ">"));
-        )*
-        s
-    } }
 }
 
 impl Speaker {
@@ -94,11 +65,11 @@ impl Speaker {
     }
 
     pub async fn skip_to(&self, time: &Duration) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": duration_to_str(time)})
+        upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::duration_to_str(time)})
             .map(|_| ())
     }
     pub async fn skip_by(&self, time: &Duration) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": duration_to_str(time) })
+        upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::duration_to_str(time) })
             .map(|_| ())
     }
     pub async fn go_to_track(&self, track_no: u32) -> Result<(), upnp::Error> {
@@ -160,7 +131,7 @@ impl Speaker {
     pub async fn crossfade(&self) -> Result<bool, upnp::Error> {
         upnp_action!(self, AVTransport:1/GetCrossfadeMode, args! { "InstanceID": 0 })?
             .extract("CrossfadeMode")
-            .and_then(parse_bool)
+            .and_then(utils::parse_bool)
     }
     pub async fn set_crossfade(&self, crossfade: bool) -> Result<(), upnp::Error> {
         let crossfade = crossfade as u8;
@@ -177,15 +148,21 @@ impl Speaker {
     pub async fn track(&self) -> Result<Option<TrackInfo>, upnp::Error> {
         let mut map = upnp_action!(self, AVTransport:1/GetPositionInfo, args! { "InstanceID": 0 })?;
         let track_no: u32 = map.extract("Track")?.parse().unwrap();
-        if track_no == 0 {
+        let duration = map.extract("TrackDuration")?;
+        let elapsed = map.extract("RelTime")?;
+        if track_no == 0
+            || duration.eq_ignore_ascii_case("not_implemented")
+            || elapsed.eq_ignore_ascii_case("not_implemented")
+        {
             return Ok(None);
         }
+
+        let duration = utils::duration_from_str(&map.extract("TrackDuration")?).unwrap();
+        let elapsed = utils::duration_from_str(&map.extract("RelTime")?).unwrap(); // TODO
         let metadata = map.extract("TrackMetaData")?;
-        let duration = crate::duration_from_str(&map.extract("TrackDuration")?).unwrap();
-        let elapsed = crate::duration_from_str(&map.extract("RelTime")?).unwrap(); // TODO
 
         let doc = Document::parse(&metadata)?;
-        let item = crate::find_root_node(&doc, "item", "Track Metadata")?;
+        let item = utils::find_root_node(&doc, "item", "Track Metadata")?;
         let track = Track::from_xml(item)?;
 
         Ok(Some(TrackInfo::new(track, track_no, duration, elapsed)))
@@ -211,7 +188,7 @@ impl Speaker {
     pub async fn mute(&self) -> Result<bool, upnp::Error> {
         upnp_action!(self, RenderingControl:1/GetMute, args! { "InstanceID": 0, "Channel": "Master" })?
             .extract("CurrentMute")
-            .and_then(crate::parse_bool)
+            .and_then(utils::parse_bool)
     }
     pub async fn set_mute(&self, mute: bool) -> Result<(), upnp::Error> {
         let mute = mute as u8;
@@ -246,7 +223,7 @@ impl Speaker {
     pub async fn loudness(&self) -> Result<bool, upnp::Error> {
         upnp_action!(self, RenderingControl:1/GetLoudness, args! { "InstanceID": 0, "Channel": "Master" })?
             .extract("CurrentLoudness")
-            .and_then(crate::parse_bool)
+            .and_then(utils::parse_bool)
     }
     pub async fn set_loudness(&self, loudness: bool) -> Result<(), upnp::Error> {
         let loudness = loudness as u8;
@@ -286,57 +263,48 @@ impl Speaker {
             .map(|_| ())
     }
 
-    /*
-    // ZONEGROUPTOPOLOGY
-    pub async fn group_topology(&self) -> Result<Vec<(String, Vec<SpeakerInfo>)>, upnp::Error> {
-        let zonegrouptopology = self.zonegrouptopology();
-        let state = zonegrouptopology.get_zone_group_state().await?;
-        let mut state = Element::parse(state.as_bytes()).map_err(|_| upnp::Error::ParseError)?;
+    pub async fn group_topology(&self) -> Result<HashMap<String, Vec<SpeakerInfo>>, upnp::Error> {
+        let state = upnp_action!(self, ZoneGroupTopology:1/GetZoneGroupState, "")?
+            .extract("ZoneGroupState")?;
 
-        let zone_groups = state
-            .take_child("ZoneGroups")
-            .map(|groups| groups.children)
-            .unwrap_or_else(Vec::new);
+        let doc = Document::parse(&state)?;
+        let state = utils::find_root_node(&doc, "ZoneGroups", "Zone Group Topology")?;
 
-        let mut groups = Vec::with_capacity(zone_groups.len());
-        for mut group in zone_groups {
-            let coordinator = group
-                .attributes
-                .remove("Coordinator")
-                .ok_or(upnp::Error::ParseError)?;
+        state
+            .children()
+            .filter(Node::is_element)
+            .filter(|c| c.tag_name().name() == "ZoneGroup")
+            .map(|node| {
+                let coordinator = node
+                    .attributes()
+                    .iter()
+                    .find(|a| a.name().eq_ignore_ascii_case("coordinator"))
+                    .map(|node| node.value())
+                    .ok_or(upnp::Error::XMLMissingElement(
+                        "ZoneGroup".into(),
+                        "Coordinator".into(),
+                    ))?
+                    .to_string();
 
-            let mut zones = Vec::with_capacity(group.children.len());
-            for zone in group.children {
-                zones
-                    .push(SpeakerInfo::from_xml(zone, &coordinator).ok_or(upnp::Error::ParseError)?)
-            }
+                let members = node
+                    .children()
+                    .filter(Node::is_element)
+                    .filter(|c| c.tag_name().name() == "ZoneGroupMember")
+                    .map(SpeakerInfo::from_xml)
+                    .collect::<Result<Vec<_>, upnp::Error>>()?;
 
-            groups.push((coordinator, zones))
-        }
+                Ok((coordinator, members))
+            })
+            .collect()
+    }
 
-        Ok(groups)
+    pub async fn join(&self, uuid: &str) -> Result<(), upnp::Error> {
+        let uuid = format!("x-rincon:{}", uuid);
+        upnp_action!(self, AVTransport:1/SetAVTransportURI, args! { "InstanceID": 0, "CurrentURI": uuid, "CurrentURIMetaData": "" })
+            .map(|_| ())
     }
     pub async fn leave(&self) -> Result<(), upnp::Error> {
-        let avtransport = self.avtransport();
-        avtransport
-            .become_coordinator_of_standalone_group(0)
-            .await?;
-        Ok(())
-    }
-    pub async fn join(&self, uuid: String) -> Result<(), upnp::Error> {
-        let to_join = format!("x-rincon:{}", uuid);
-        self.set_transport_uri(to_join).await
-    }
-    */
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn instance_id() {
-        assert_eq!(
-            args! { "InstanceID": 0, "Speed": 1 },
-            "<InstanceID>0</InstanceID><Speed>1</Speed>"
-        );
+        upnp_action!(self, AVTransport:1/BecomeCoordinatorOfStandaloneGroup, args! { "InstanceID": 0 })
+            .map(|_| ())
     }
 }

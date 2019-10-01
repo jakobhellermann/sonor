@@ -1,3 +1,4 @@
+use crate::utils;
 use roxmltree::Node;
 use std::time::Duration;
 
@@ -63,9 +64,9 @@ impl Track {
 
         for child in node.children() {
             match child.tag_name().name() {
-                "title" => title = Some(crate::parse_node_text(child)?),
-                "creator" => creator = Some(crate::parse_node_text(child)?),
-                "album" => album = Some(crate::parse_node_text(child)?),
+                "title" => title = Some(utils::parse_node_text(child)?),
+                "creator" => creator = Some(utils::parse_node_text(child)?),
+                "album" => album = Some(utils::parse_node_text(child)?),
                 "res" => res = Some(child),
                 _ => (),
             }
@@ -81,9 +82,9 @@ impl Track {
             .attributes()
             .iter()
             .find(|a| a.name() == "duration")
-            .and_then(|a| crate::duration_from_str(a.value()));
+            .and_then(|a| utils::duration_from_str(a.value()));
 
-        let uri = crate::parse_node_text(res)?;
+        let uri = utils::parse_node_text(res)?;
 
         Ok(Self {
             title,

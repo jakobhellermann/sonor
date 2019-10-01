@@ -30,7 +30,22 @@ async fn sonos() -> Result<(), sonos::upnp::Error> {
     for track in queue.iter().skip(1).take(5) {
         println!("  - {}", track);
     }
-    println!("  - ...");
+    println!("  - ...\n");
+
+    println!("Groups: ");
+    let groups = speaker.group_topology().await?;
+    for (coordinator, speakers) in groups {
+        let coordinator = speakers.iter().find(|s| s.uuid() == &coordinator).unwrap();
+        println!(
+            " - {}:{} @ {}:",
+            coordinator.room_name(),
+            coordinator.uuid(),
+            coordinator.location()
+        );
+        for speaker in speakers {
+            println!("   - {}", speaker.room_name());
+        }
+    }
 
     Ok(())
 }
