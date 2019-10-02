@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 upnp = { path = "../upnp" }
 futures-preview = "0.3.0-alpha.18"
-marksman_escape = "0.1.2"
 roxmltree = "0.7"
 
 [dev-dependencies]
