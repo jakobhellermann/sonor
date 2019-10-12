@@ -43,7 +43,7 @@ pub struct SpeakerInfo {
 }
 impl std::cmp::PartialEq for SpeakerInfo {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid() == other.uuid()
+        self.uuid().eq_ignore_ascii_case(other.uuid())
     }
 }
 

@@ -11,3 +11,4 @@ roxmltree = "0.7"
 
 [dev-dependencies]
 async-std = "0.99.8"
+pin-utils = "0.1.0-alpha.4"

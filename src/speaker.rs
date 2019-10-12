@@ -150,6 +150,8 @@ impl Speaker {
         let track_no: u32 = map.extract("Track")?.parse().unwrap();
         let duration = map.extract("TrackDuration")?;
         let elapsed = map.extract("RelTime")?;
+        let metadata = map.extract("TrackMetaData")?;
+
         if track_no == 0
             || duration.eq_ignore_ascii_case("not_implemented")
             || elapsed.eq_ignore_ascii_case("not_implemented")
@@ -157,9 +159,8 @@ impl Speaker {
             return Ok(None);
         }
 
-        let duration = utils::duration_from_str(&map.extract("TrackDuration")?).unwrap();
-        let elapsed = utils::duration_from_str(&map.extract("RelTime")?).unwrap(); // TODO
-        let metadata = map.extract("TrackMetaData")?;
+        let duration = utils::duration_from_str(&duration)?;
+        let elapsed = utils::duration_from_str(&elapsed)?;
 
         let doc = Document::parse(&metadata)?;
         let item = utils::find_root_node(&doc, "item", "Track Metadata")?;
@@ -273,7 +274,7 @@ impl Speaker {
         state
             .children()
             .filter(Node::is_element)
-            .filter(|c| c.tag_name().name() == "ZoneGroup")
+            .filter(|c| c.tag_name().name().eq_ignore_ascii_case("ZoneGroup"))
             .map(|node| {
                 let coordinator = node
                     .attributes()
@@ -289,7 +290,7 @@ impl Speaker {
                 let members = node
                     .children()
                     .filter(Node::is_element)
-                    .filter(|c| c.tag_name().name() == "ZoneGroupMember")
+                    .filter(|c| c.tag_name().name().eq_ignore_ascii_case("ZoneGroupMember"))
                     .map(SpeakerInfo::from_xml)
                     .collect::<Result<Vec<_>, upnp::Error>>()?;
 
