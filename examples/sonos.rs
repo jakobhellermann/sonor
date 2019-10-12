@@ -19,7 +19,7 @@ async fn sonos() -> Result<(), upnp::Error> {
 
 #[allow(unused)]
 async fn my_speaker() -> Result<Option<Speaker>, upnp::Error> {
-    Speaker::from_ip([192, 168, 2, 29].into())
+    Speaker::from_ip([192, 168, 2, 58].into())
         .await
         .map(|x| Some(x.expect("ip is sonos device")))
 }

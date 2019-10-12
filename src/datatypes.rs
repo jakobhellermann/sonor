@@ -1,5 +1,7 @@
 use roxmltree::Node;
 use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::cmp::PartialEq;
 
 #[derive(Debug)]
 pub enum RepeatMode {
@@ -35,15 +37,20 @@ impl std::str::FromStr for RepeatMode {
     }
 }
 
-#[derive(Debug, Eq, Hash)]
+#[derive(Debug, Eq)]
 pub struct SpeakerInfo {
     room_name: String,
     uuid: String,
     location: String,
 }
-impl std::cmp::PartialEq for SpeakerInfo {
+impl PartialEq for SpeakerInfo {
     fn eq(&self, other: &Self) -> bool {
         self.uuid().eq_ignore_ascii_case(other.uuid())
+    }
+}
+impl Hash for SpeakerInfo {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.uuid.hash(state);
     }
 }
 
@@ -64,19 +71,19 @@ impl SpeakerInfo {
 
         Ok(Self {
             room_name: room_name
-                .ok_or(upnp::Error::XMLMissingElement(
+                .ok_or_else(|| upnp::Error::XMLMissingElement(
                     "RoomName".to_string(),
                     "ZoneGroupMember".to_string(),
                 ))?
                 .to_string(),
             uuid: uuid
-                .ok_or(upnp::Error::XMLMissingElement(
+                .ok_or_else(|| upnp::Error::XMLMissingElement(
                     "RoomName".to_string(),
                     "ZoneGroupMember".to_string(),
                 ))?
                 .to_string(),
             location: location
-                .ok_or(upnp::Error::XMLMissingElement(
+                .ok_or_else(|| upnp::Error::XMLMissingElement(
                     "RoomName".to_string(),
                     "ZoneGroupMember".to_string(),
                 ))?

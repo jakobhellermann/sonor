@@ -38,7 +38,7 @@ pub trait HashMapExt {
 }
 impl HashMapExt for std::collections::HashMap<String, String> {
     fn extract(&mut self, key: &str) -> Result<String, upnp::Error> {
-        self.remove(key).ok_or(upnp::Error::XMLMissingElement(
+        self.remove(key).ok_or_else(|| upnp::Error::XMLMissingElement(
             "UPnP Response".to_string(),
             key.to_string(),
         ))
@@ -71,7 +71,6 @@ pub fn duration_from_str(s: &str) -> Result<std::time::Duration, upnp::Error> {
 pub fn parse_bool(s: String) -> Result<bool, upnp::Error> {
     s.parse()
         .map_err(|e| upnp::Error::InvalidResponse(Box::new(e)))
-        .into()
 }
 
 use roxmltree::{Document, Node};

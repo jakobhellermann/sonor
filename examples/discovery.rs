@@ -8,7 +8,9 @@ fn main() {
 }
 
 async fn discover() -> Result<(), sonos::upnp::Error> {
-    let mut devices = sonos::discover(Duration::from_secs(2)).await?;
+    let devices = sonos::discover(Duration::from_secs(2)).await?;
+
+    pin_utils::pin_mut!(devices);
     while let Some(device) = devices.next().await {
         let device = device?;
         let name = device.name().await?;

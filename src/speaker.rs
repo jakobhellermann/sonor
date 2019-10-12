@@ -150,7 +150,6 @@ impl Speaker {
         let track_no: u32 = map.extract("Track")?.parse().unwrap();
         let duration = map.extract("TrackDuration")?;
         let elapsed = map.extract("RelTime")?;
-        let metadata = map.extract("TrackMetaData")?;
 
         if track_no == 0
             || duration.eq_ignore_ascii_case("not_implemented")
@@ -158,6 +157,8 @@ impl Speaker {
         {
             return Ok(None);
         }
+
+        let metadata = map.extract("TrackMetaData")?;
 
         let duration = utils::duration_from_str(&duration)?;
         let elapsed = utils::duration_from_str(&elapsed)?;
@@ -250,7 +251,7 @@ impl Speaker {
 
         doc.root()
             .first_element_child()
-            .ok_or(upnp::Error::ParseError(
+            .ok_or_else(|| upnp::Error::ParseError(
                 "Queue Response contains no children",
             ))?
             .children()
@@ -281,7 +282,7 @@ impl Speaker {
                     .iter()
                     .find(|a| a.name().eq_ignore_ascii_case("coordinator"))
                     .map(|node| node.value())
-                    .ok_or(upnp::Error::XMLMissingElement(
+                    .ok_or_else(|| upnp::Error::XMLMissingElement(
                         "ZoneGroup".into(),
                         "Coordinator".into(),
                     ))?
