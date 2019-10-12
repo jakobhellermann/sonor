@@ -1,3 +1,4 @@
+#[doc(hidden)]
 #[macro_export]
 macro_rules! upnp_action {
     ( $self:expr, $service:ident:$version:literal/$action:ident, $args:expr ) => {
@@ -20,6 +21,7 @@ macro_rules! upnp_action {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! args {
     ( $( $var:literal: $e:expr ),* ) => { &{
