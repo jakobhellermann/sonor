@@ -72,7 +72,7 @@ pub fn duration_from_str(s: &str) -> Result<std::time::Duration, upnp::Error> {
 
 pub fn parse_bool(s: String) -> Result<bool, upnp::Error> {
     s.parse()
-        .map_err(|e| upnp::Error::InvalidResponse(Box::new(e)))
+        .map_err(upnp::Error::invalid_response)
 }
 
 use roxmltree::{Document, Node};

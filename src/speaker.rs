@@ -5,7 +5,7 @@ use crate::{
     RepeatMode, SpeakerInfo,
 };
 use futures::prelude::*;
-use roxmltree::{Document, Node};
+use roxmltree::{Document, Node, Attribute};
 use std::{collections::HashMap, net::Ipv4Addr, time::Duration};
 use upnp::{
     ssdp_client::search::{SearchTarget, URN},
@@ -49,32 +49,32 @@ impl Speaker {
 
     // AVTransport
     pub async fn stop(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Stop, args!{ "InstanceID": 0 }).map(|_| ())
+        upnp_action!(self, AVTransport:1/Stop, args!{ "InstanceID": 0 }).map(drop)
     }
     pub async fn play(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Play, args!{ "InstanceID": 0, "Speed": 1 }).map(|_| ())
+        upnp_action!(self, AVTransport:1/Play, args!{ "InstanceID": 0, "Speed": 1 }).map(drop)
     }
     pub async fn pause(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Pause, args!{ "InstanceID": 0 }).map(|_| ())
+        upnp_action!(self, AVTransport:1/Pause, args!{ "InstanceID": 0 }).map(drop)
     }
     pub async fn next(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Next, args!{ "InstanceID": 0 }).map(|_| ())
+        upnp_action!(self, AVTransport:1/Next, args!{ "InstanceID": 0 }).map(drop)
     }
     pub async fn previous(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Previous, args!{ "InstanceID": 0 }).map(|_| ())
+        upnp_action!(self, AVTransport:1/Previous, args!{ "InstanceID": 0 }).map(drop)
     }
 
     pub async fn skip_to(&self, time: &Duration) -> Result<(), upnp::Error> {
         upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::duration_to_str(time)})
-            .map(|_| ())
+            .map(drop)
     }
     pub async fn skip_by(&self, time: &Duration) -> Result<(), upnp::Error> {
         upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::duration_to_str(time) })
-            .map(|_| ())
+            .map(drop)
     }
     pub async fn go_to_track(&self, track_no: u32) -> Result<(), upnp::Error> {
         upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "TRACK_NR", "Target": track_no + 1})
-            .map(|_| ())
+            .map(drop)
     }
 
     async fn playback_mode(&self) -> Result<(RepeatMode, bool), upnp::Error> {
@@ -117,7 +117,7 @@ impl Speaker {
             (RepeatMode::All, true) => "SHUFFLE",
         };
         upnp_action!(self, AVTransport:1/SetPlayMode, args! { "InstanceID": 0, "NewPlayMode": playback_mode })
-            .map(|_| ())
+            .map(drop)
     }
     pub async fn set_repeat_mode(&self, repeat_mode: RepeatMode) -> Result<(), upnp::Error> {
         self.set_playback_mode(repeat_mode, self.shuffle().await?)
@@ -136,7 +136,7 @@ impl Speaker {
     pub async fn set_crossfade(&self, crossfade: bool) -> Result<(), upnp::Error> {
         let crossfade = crossfade as u8;
         upnp_action!(self, AVTransport:1/SetCrossfadeMode, args! { "InstanceID": 0, "CrossfadeMode": crossfade })
-            .map(|_| ())
+            .map(drop)
     }
 
     pub async fn is_playing(&self) -> Result<bool, upnp::Error> {
@@ -175,16 +175,16 @@ impl Speaker {
     pub async fn volume(&self) -> Result<u16, upnp::Error> {
         upnp_action!(self, RenderingControl:1/GetVolume, args! { "InstanceID": 0, "Channel": "Master" })?
             .extract("CurrentVolume")
-            .and_then(|x| x.parse().map_err(|e| upnp::Error::InvalidResponse(Box::new(e))))
+            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
     pub async fn set_volume(&self, volume: u16) -> Result<(), upnp::Error> {
         upnp_action!(self, RenderingControl:1/SetVolume, args! { "InstanceID": 0, "Channel": "Master", "DesiredVolume": volume })
-            .map(|_| ())
+            .map(drop)
     }
     pub async fn set_volume_relative(&self, adjustment: i32) -> Result<u16, upnp::Error> {
         upnp_action!(self, RenderingControl:1/SetRelativeVolume, args! { "InstanceID": 0, "Channel": "Master", "Adjustment": adjustment })?
             .extract("NewVolume")
-            .and_then(|x| x.parse().map_err(|e| upnp::Error::InvalidResponse(Box::new(e))))
+            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
 
     pub async fn mute(&self) -> Result<bool, upnp::Error> {
@@ -195,7 +195,7 @@ impl Speaker {
     pub async fn set_mute(&self, mute: bool) -> Result<(), upnp::Error> {
         let mute = mute as u8;
         upnp_action!(self, RenderingControl:1/SetMute, args! { "InstanceID": 0, "Channel": "Master", "DesiredMute": mute })
-            .map(|_| ())
+            .map(drop)
     }
 
     pub async fn bass(&self) -> Result<i16, upnp::Error> {
@@ -203,24 +203,24 @@ impl Speaker {
             .extract("CurrentBass")
             .and_then(|x| {
                 x.parse()
-                    .map_err(|e| upnp::Error::InvalidResponse(Box::new(e)))
+                    .map_err(upnp::Error::invalid_response)
             })
     }
     pub async fn set_bass(&self, bass: i16) -> Result<(), upnp::Error> {
         upnp_action!(self, RenderingControl:1/SetBass, args! { "InstanceID": 0, "DesiredBass": bass })
-            .map(|_| ())
+            .map(drop)
     }
     pub async fn treble(&self) -> Result<i16, upnp::Error> {
         upnp_action!(self, RenderingControl:1/GetTreble, args! { "InstanceID": 0 })?
             .extract("CurrentTreble")
             .and_then(|x| {
                 x.parse()
-                    .map_err(|e| upnp::Error::InvalidResponse(Box::new(e)))
+                    .map_err(upnp::Error::invalid_response)
             })
     }
     pub async fn set_treble(&self, treble: i16) -> Result<(), upnp::Error> {
         upnp_action!(self, RenderingControl:1/SetTreble, args! { "InstanceID": 0, "DesiredTreble": treble })
-            .map(|_| ())
+            .map(drop)
     }
     pub async fn loudness(&self) -> Result<bool, upnp::Error> {
         upnp_action!(self, RenderingControl:1/GetLoudness, args! { "InstanceID": 0, "Channel": "Master" })?
@@ -230,7 +230,7 @@ impl Speaker {
     pub async fn set_loudness(&self, loudness: bool) -> Result<(), upnp::Error> {
         let loudness = loudness as u8;
         upnp_action!(self, RenderingControl:1/SetLoudness, args! { "InstanceID": 0, "Channel": "Master", "DesiredLoudness": loudness })
-            .map(|_| ())
+            .map(drop)
     }
 
     // Queue
@@ -262,7 +262,7 @@ impl Speaker {
 
     pub async fn clear_queue(&self) -> Result<(), upnp::Error> {
         upnp_action!(self, AVTransport:1/RemoveAllTracksFromQueue, args! { "InstanceID": 0 })
-            .map(|_| ())
+            .map(drop)
     }
 
     pub async fn group_topology(&self) -> Result<HashMap<String, Vec<SpeakerInfo>>, upnp::Error> {
@@ -281,7 +281,7 @@ impl Speaker {
                     .attributes()
                     .iter()
                     .find(|a| a.name().eq_ignore_ascii_case("coordinator"))
-                    .map(|node| node.value())
+                    .map(Attribute::value)
                     .ok_or_else(|| upnp::Error::XMLMissingElement(
                         "ZoneGroup".into(),
                         "Coordinator".into(),
@@ -303,10 +303,10 @@ impl Speaker {
     pub async fn join(&self, uuid: &str) -> Result<(), upnp::Error> {
         let uuid = format!("x-rincon:{}", uuid);
         upnp_action!(self, AVTransport:1/SetAVTransportURI, args! { "InstanceID": 0, "CurrentURI": uuid, "CurrentURIMetaData": "" })
-            .map(|_| ())
+            .map(drop)
     }
     pub async fn leave(&self) -> Result<(), upnp::Error> {
         upnp_action!(self, AVTransport:1/BecomeCoordinatorOfStandaloneGroup, args! { "InstanceID": 0 })
-            .map(|_| ())
+            .map(drop)
     }
 }
