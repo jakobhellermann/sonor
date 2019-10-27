@@ -1,7 +1,7 @@
 use roxmltree::Node;
+use std::cmp::PartialEq;
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::cmp::PartialEq;
 
 #[derive(Debug)]
 pub enum RepeatMode {
@@ -71,22 +71,28 @@ impl SpeakerInfo {
 
         Ok(Self {
             room_name: room_name
-                .ok_or_else(|| upnp::Error::XMLMissingElement(
-                    "RoomName".to_string(),
-                    "ZoneGroupMember".to_string(),
-                ))?
+                .ok_or_else(|| {
+                    upnp::Error::XMLMissingElement(
+                        "RoomName".to_string(),
+                        "ZoneGroupMember".to_string(),
+                    )
+                })?
                 .to_string(),
             uuid: uuid
-                .ok_or_else(|| upnp::Error::XMLMissingElement(
-                    "RoomName".to_string(),
-                    "ZoneGroupMember".to_string(),
-                ))?
+                .ok_or_else(|| {
+                    upnp::Error::XMLMissingElement(
+                        "UUID".to_string(),
+                        "ZoneGroupMember".to_string(),
+                    )
+                })?
                 .to_string(),
             location: location
-                .ok_or_else(|| upnp::Error::XMLMissingElement(
-                    "RoomName".to_string(),
-                    "ZoneGroupMember".to_string(),
-                ))?
+                .ok_or_else(|| {
+                    upnp::Error::XMLMissingElement(
+                        "Location".to_string(),
+                        "ZoneGroupMember".to_string(),
+                    )
+                })?
                 .to_string(),
         })
     }

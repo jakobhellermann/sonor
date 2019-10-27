@@ -1,22 +1,32 @@
+use crate::args;
+use crate::track::{Track, TrackInfo};
 use crate::utils::{self, HashMapExt};
-use crate::{args, upnp_action};
-use crate::{
-    track::{Track, TrackInfo},
-    RepeatMode, SpeakerInfo,
-};
+use crate::{RepeatMode, SpeakerInfo};
+
+use upnp::ssdp_client::{SearchTarget, URN};
+use upnp::Device;
+
 use futures::prelude::*;
-use roxmltree::{Document, Node, Attribute};
-use std::{collections::HashMap, net::Ipv4Addr, time::Duration};
-use upnp::{
-    ssdp_client::search::{SearchTarget, URN},
-    Device,
-};
+use roxmltree::{Attribute, Document, Node};
+
+use std::collections::HashMap;
+use std::net::Ipv4Addr;
+use std::time::Duration;
 
 const SONOS_URN: URN = URN::device("schemas-upnp-org", "ZonePlayer", 1);
 
+const AV_TRANSPORT: &URN = &URN::service("schemas-upnp-org", "AV_TRANSPORT", 1);
+const DEVICE_PROPERTIES: &URN = &URN::service("schemas-upnp-org", "DeviceProperties", 1);
+const RENDERING_CONTROL: &URN = &URN::service("schemas-upnp-org", "RENDERING_CONTROL", 1);
+const ZONE_GROUP_TOPOLOGY: &URN = &URN::service("schemas-upnp-org", "ZONE_GROUP_TOPOLOGY", 1);
+
+const DEFAULT_ARGS: &str = "<InstanceID>0</InstanceID>";
+
 #[derive(Debug)]
+/// A sonos speaker.
 pub struct Speaker(upnp::Device);
 
+/// discover sonos players on the network and stream their responses
 pub async fn discover(
     timeout: Duration,
 ) -> Result<impl Stream<Item = Result<Speaker, upnp::Error>>, upnp::Error> {
@@ -28,6 +38,7 @@ pub async fn discover(
 }
 
 impl Speaker {
+    /// create a speaker from an already found UPnP-Device
     pub fn from_device(device: Device) -> Option<Self> {
         if device.device_type() == &SONOS_URN {
             Some(Self(device))
@@ -35,6 +46,9 @@ impl Speaker {
             None
         }
     }
+
+    /// create a speaker from an IPv4 address.
+    /// returns `Ok(None)` when the device was found but isn't a sonos player.
     pub async fn from_ip(addr: Ipv4Addr) -> Result<Option<Self>, upnp::Error> {
         let uri = format!("http://{}:1400/xml/device_description.xml", addr)
             .parse()
@@ -44,43 +58,71 @@ impl Speaker {
     }
 
     pub async fn name(&self) -> Result<String, upnp::Error> {
-        upnp_action!(self, DeviceProperties:1/GetZoneAttributes, "")?.extract("CurrentZoneName")
+        self.action(DEVICE_PROPERTIES, "GetZoneAttributes", "")
+            .await?
+            .extract("CurrentZoneName")
     }
 
-    // AVTransport
+    // AV_TRANSPORT
     pub async fn stop(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Stop, args!{ "InstanceID": 0 }).map(drop)
+        self.action(AV_TRANSPORT, "Stop", DEFAULT_ARGS)
+            .await
+            .map(drop)
     }
     pub async fn play(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Play, args!{ "InstanceID": 0, "Speed": 1 }).map(drop)
+        self.action(AV_TRANSPORT, "Play", args! { "InstanceID": 0, "Speed": 1 })
+            .await
+            .map(drop)
     }
     pub async fn pause(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Pause, args!{ "InstanceID": 0 }).map(drop)
+        self.action(AV_TRANSPORT, "Pause", DEFAULT_ARGS)
+            .await
+            .map(drop)
     }
     pub async fn next(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Next, args!{ "InstanceID": 0 }).map(drop)
+        self.action(AV_TRANSPORT, "Next", DEFAULT_ARGS)
+            .await
+            .map(drop)
     }
     pub async fn previous(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Previous, args!{ "InstanceID": 0 }).map(drop)
+        self.action(AV_TRANSPORT, "Previous", DEFAULT_ARGS)
+            .await
+            .map(drop)
     }
 
     pub async fn skip_to(&self, time: &Duration) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::duration_to_str(time)})
-            .map(drop)
+        self.action(
+            AV_TRANSPORT,
+            "Seek",
+            args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::duration_to_str(time)},
+        )
+        .await
+        .map(drop)
     }
     pub async fn skip_by(&self, time: &Duration) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::duration_to_str(time) })
-            .map(drop)
+        self.action(
+            AV_TRANSPORT,
+            "Seek",
+            args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::duration_to_str(time)},
+        )
+        .await
+        .map(drop)
     }
     pub async fn go_to_track(&self, track_no: u32) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/Seek, args! { "InstanceID": 0, "Unit": "TRACK_NR", "Target": track_no + 1})
-            .map(drop)
+        self.action(
+            AV_TRANSPORT,
+            "Seek",
+            args! { "InstanceID": 0, "Unit": "TRACK_NR", "Target": track_no + 1},
+        )
+        .await
+        .map(drop)
     }
 
     async fn playback_mode(&self) -> Result<(RepeatMode, bool), upnp::Error> {
-        let play_mode =
-            upnp_action!(self, AVTransport:1/GetTransportSettings, args! { "InstanceID": 0 })?
-                .extract("PlayMode")?;
+        let play_mode = self
+            .action(AV_TRANSPORT, "GetTransportSettings", DEFAULT_ARGS)
+            .await?
+            .extract("PlayMode")?;
 
         match play_mode.to_uppercase().as_str() {
             "NORMAL" => Ok((RepeatMode::None, false)),
@@ -89,9 +131,9 @@ impl Speaker {
             "SHUFFLE_NOREPEAT" => Ok((RepeatMode::None, true)),
             "SHUFFLE" => Ok((RepeatMode::All, true)),
             "SHUFFLE_REPEAT_ONE" => Ok((RepeatMode::One, true)),
-            _ => Err(upnp::Error::InvalidResponse(Box::new(
+            _ => Err(upnp::Error::invalid_response(
                 crate::datatypes::ParseRepeatModeError,
-            ))),
+            )),
         }
     }
     pub async fn repeat_mode(&self) -> Result<RepeatMode, upnp::Error> {
@@ -116,8 +158,13 @@ impl Speaker {
             (RepeatMode::One, true) => "SHUFFLE_REPEAT_ONE",
             (RepeatMode::All, true) => "SHUFFLE",
         };
-        upnp_action!(self, AVTransport:1/SetPlayMode, args! { "InstanceID": 0, "NewPlayMode": playback_mode })
-            .map(drop)
+        self.action(
+            AV_TRANSPORT,
+            "SetPlayMode",
+            args! { "InstanceID": 0, "NewPlayMode": playback_mode },
+        )
+        .await
+        .map(drop)
     }
     pub async fn set_repeat_mode(&self, repeat_mode: RepeatMode) -> Result<(), upnp::Error> {
         self.set_playback_mode(repeat_mode, self.shuffle().await?)
@@ -129,24 +176,33 @@ impl Speaker {
     }
 
     pub async fn crossfade(&self) -> Result<bool, upnp::Error> {
-        upnp_action!(self, AVTransport:1/GetCrossfadeMode, args! { "InstanceID": 0 })?
+        self.action(AV_TRANSPORT, "GetCrossfadeMode", DEFAULT_ARGS)
+            .await?
             .extract("CrossfadeMode")
             .and_then(utils::parse_bool)
     }
     pub async fn set_crossfade(&self, crossfade: bool) -> Result<(), upnp::Error> {
         let crossfade = crossfade as u8;
-        upnp_action!(self, AVTransport:1/SetCrossfadeMode, args! { "InstanceID": 0, "CrossfadeMode": crossfade })
-            .map(drop)
+        self.action(
+            AV_TRANSPORT,
+            "SetCrossfadeMode",
+            args! { "InstanceID": 0, "CrossfadeMode": crossfade },
+        )
+        .await
+        .map(drop)
     }
 
     pub async fn is_playing(&self) -> Result<bool, upnp::Error> {
-        upnp_action!(self, AVTransport:1/GetTransportInfo, args! { "InstanceID": 0 })?
+        self.action(AV_TRANSPORT, "GetTransportInfo", DEFAULT_ARGS)
+            .await?
             .extract("CurrentTransportState")
             .map(|x| x.eq_ignore_ascii_case("playing"))
     }
 
     pub async fn track(&self) -> Result<Option<TrackInfo>, upnp::Error> {
-        let mut map = upnp_action!(self, AVTransport:1/GetPositionInfo, args! { "InstanceID": 0 })?;
+        let mut map = self
+            .action(AV_TRANSPORT, "GetPositionInfo", DEFAULT_ARGS)
+            .await?;
         let track_no: u32 = map.extract("Track")?.parse().unwrap();
         let duration = map.extract("TrackDuration")?;
         let elapsed = map.extract("RelTime")?;
@@ -170,77 +226,115 @@ impl Speaker {
         Ok(Some(TrackInfo::new(track, track_no, duration, elapsed)))
     }
 
-    // RenderingControl
+    // RENDERING_CONTROL
 
     pub async fn volume(&self) -> Result<u16, upnp::Error> {
-        upnp_action!(self, RenderingControl:1/GetVolume, args! { "InstanceID": 0, "Channel": "Master" })?
-            .extract("CurrentVolume")
-            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
+        self.action(
+            RENDERING_CONTROL,
+            "GetVolume",
+            args! { "InstanceID": 0, "Channel": "Master" },
+        )
+        .await?
+        .extract("CurrentVolume")
+        .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
     pub async fn set_volume(&self, volume: u16) -> Result<(), upnp::Error> {
-        upnp_action!(self, RenderingControl:1/SetVolume, args! { "InstanceID": 0, "Channel": "Master", "DesiredVolume": volume })
-            .map(drop)
+        self.action(
+            RENDERING_CONTROL,
+            "SetVolume",
+            args! { "InstanceID": 0, "Channel": "Master", "DesiredVolume": volume },
+        )
+        .await
+        .map(drop)
     }
     pub async fn set_volume_relative(&self, adjustment: i32) -> Result<u16, upnp::Error> {
-        upnp_action!(self, RenderingControl:1/SetRelativeVolume, args! { "InstanceID": 0, "Channel": "Master", "Adjustment": adjustment })?
-            .extract("NewVolume")
-            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
+        self.action(
+            RENDERING_CONTROL,
+            "SetRelativeVolume",
+            args! { "InstanceID": 0, "Channel": "Master", "Adjustment": adjustment },
+        )
+        .await?
+        .extract("NewVolume")
+        .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
 
     pub async fn mute(&self) -> Result<bool, upnp::Error> {
-        upnp_action!(self, RenderingControl:1/GetMute, args! { "InstanceID": 0, "Channel": "Master" })?
-            .extract("CurrentMute")
-            .and_then(utils::parse_bool)
+        self.action(
+            RENDERING_CONTROL,
+            "GetMute",
+            args! { "InstanceID": 0, "Channel": "Master" },
+        )
+        .await?
+        .extract("CurrentMute")
+        .and_then(utils::parse_bool)
     }
     pub async fn set_mute(&self, mute: bool) -> Result<(), upnp::Error> {
         let mute = mute as u8;
-        upnp_action!(self, RenderingControl:1/SetMute, args! { "InstanceID": 0, "Channel": "Master", "DesiredMute": mute })
-            .map(drop)
+        self.action(
+            RENDERING_CONTROL,
+            "SetMute",
+            args! { "InstanceID": 0, "Channel": "Master", "DesiredMute": mute },
+        )
+        .await
+        .map(drop)
     }
 
     pub async fn bass(&self) -> Result<i16, upnp::Error> {
-        upnp_action!(self, RenderingControl:1/GetBass, args! { "InstanceID": 0 })?
+        self.action(RENDERING_CONTROL, "GetBass", DEFAULT_ARGS)
+            .await?
             .extract("CurrentBass")
-            .and_then(|x| {
-                x.parse()
-                    .map_err(upnp::Error::invalid_response)
-            })
+            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
     pub async fn set_bass(&self, bass: i16) -> Result<(), upnp::Error> {
-        upnp_action!(self, RenderingControl:1/SetBass, args! { "InstanceID": 0, "DesiredBass": bass })
-            .map(drop)
+        self.action(
+            RENDERING_CONTROL,
+            "SetBass",
+            args! { "InstanceID": 0, "DesiredBass": bass },
+        )
+        .await
+        .map(drop)
     }
     pub async fn treble(&self) -> Result<i16, upnp::Error> {
-        upnp_action!(self, RenderingControl:1/GetTreble, args! { "InstanceID": 0 })?
+        self.action(RENDERING_CONTROL, "GetTreble", DEFAULT_ARGS)
+            .await?
             .extract("CurrentTreble")
-            .and_then(|x| {
-                x.parse()
-                    .map_err(upnp::Error::invalid_response)
-            })
+            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
     pub async fn set_treble(&self, treble: i16) -> Result<(), upnp::Error> {
-        upnp_action!(self, RenderingControl:1/SetTreble, args! { "InstanceID": 0, "DesiredTreble": treble })
-            .map(drop)
+        self.action(
+            RENDERING_CONTROL,
+            "SetTreble",
+            args! { "InstanceID": 0, "DesiredTreble": treble },
+        )
+        .await
+        .map(drop)
     }
     pub async fn loudness(&self) -> Result<bool, upnp::Error> {
-        upnp_action!(self, RenderingControl:1/GetLoudness, args! { "InstanceID": 0, "Channel": "Master" })?
-            .extract("CurrentLoudness")
-            .and_then(utils::parse_bool)
+        self.action(
+            RENDERING_CONTROL,
+            "GetLoudness",
+            args! { "InstanceID": 0, "Channel": "Master" },
+        )
+        .await?
+        .extract("CurrentLoudness")
+        .and_then(utils::parse_bool)
     }
     pub async fn set_loudness(&self, loudness: bool) -> Result<(), upnp::Error> {
         let loudness = loudness as u8;
-        upnp_action!(self, RenderingControl:1/SetLoudness, args! { "InstanceID": 0, "Channel": "Master", "DesiredLoudness": loudness })
-            .map(drop)
+        self.action(
+            RENDERING_CONTROL,
+            "SetLoudness",
+            args! { "InstanceID": 0, "Channel": "Master", "DesiredLoudness": loudness },
+        )
+        .await
+        .map(drop)
     }
 
     // Queue
     pub async fn queue(&self) -> Result<Vec<Track>, upnp::Error> {
         let mut map = self
-            .0
-            .find_service(&URN::service("schemas-sonos-com", "Queue", 1))
-            .expect("sonos device doesn't have a Queue:1 service")
             .action(
-                self.0.url(),
+                &URN::service("schemas-sonos-com", "Queue", 1),
                 "Browse",
                 args! { "QueueID": 0, "StartingIndex": 0, "RequestedCount": std::u32::MAX },
             )
@@ -251,9 +345,7 @@ impl Speaker {
 
         doc.root()
             .first_element_child()
-            .ok_or_else(|| upnp::Error::ParseError(
-                "Queue Response contains no children",
-            ))?
+            .ok_or_else(|| upnp::Error::ParseError("Queue Response contains no children"))?
             .children()
             .filter(roxmltree::Node::is_element)
             .map(Track::from_xml)
@@ -261,12 +353,16 @@ impl Speaker {
     }
 
     pub async fn clear_queue(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/RemoveAllTracksFromQueue, args! { "InstanceID": 0 })
+        self.action(AV_TRANSPORT, "RemoveAllTracksFromQueue", DEFAULT_ARGS)
+            .await
             .map(drop)
     }
 
+    /// Returns a map of all discovered devices in the network to their respective information
     pub async fn group_topology(&self) -> Result<HashMap<String, Vec<SpeakerInfo>>, upnp::Error> {
-        let state = upnp_action!(self, ZoneGroupTopology:1/GetZoneGroupState, "")?
+        let state = self
+            .action(ZONE_GROUP_TOPOLOGY, "GetZoneGroupState", "")
+            .await?
             .extract("ZoneGroupState")?;
 
         let doc = Document::parse(&state)?;
@@ -282,10 +378,9 @@ impl Speaker {
                     .iter()
                     .find(|a| a.name().eq_ignore_ascii_case("coordinator"))
                     .map(Attribute::value)
-                    .ok_or_else(|| upnp::Error::XMLMissingElement(
-                        "ZoneGroup".into(),
-                        "Coordinator".into(),
-                    ))?
+                    .ok_or_else(|| {
+                        upnp::Error::XMLMissingElement("ZoneGroup".into(), "Coordinator".into())
+                    })?
                     .to_string();
 
                 let members = node
@@ -300,13 +395,38 @@ impl Speaker {
             .collect()
     }
 
+    /// From a group with a player.
+    /// The uuid should not contain the `x-rincon:` part of the identifier.
     pub async fn join(&self, uuid: &str) -> Result<(), upnp::Error> {
         let uuid = format!("x-rincon:{}", uuid);
-        upnp_action!(self, AVTransport:1/SetAVTransportURI, args! { "InstanceID": 0, "CurrentURI": uuid, "CurrentURIMetaData": "" })
-            .map(drop)
+        self.action(
+            AV_TRANSPORT,
+            "SetAV_TRANSPORTURI",
+            args! { "InstanceID": 0, "CurrentURI": uuid, "CurrentURIMetaData": "" },
+        )
+        .await
+        .map(drop)
     }
     pub async fn leave(&self) -> Result<(), upnp::Error> {
-        upnp_action!(self, AVTransport:1/BecomeCoordinatorOfStandaloneGroup, args! { "InstanceID": 0 })
-            .map(drop)
+        self.action(
+            AV_TRANSPORT,
+            "BecomeCoordinatorOfStandaloneGroup",
+            DEFAULT_ARGS,
+        )
+        .await
+        .map(drop)
+    }
+
+    pub async fn action(
+        &self,
+        service: &URN,
+        action: &str,
+        payload: &str,
+    ) -> Result<HashMap<String, String>, upnp::Error> {
+        self.0
+            .find_service(service)
+            .unwrap_or_else(|| panic!(format!("expected service '{}'", service)))
+            .action(self.0.url(), action, payload)
+            .await
     }
 }
