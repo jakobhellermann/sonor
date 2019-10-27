@@ -9,3 +9,5 @@ pub use speaker::Speaker;
 pub use track::Track;
 
 pub use upnp;
+
+type Result<T> = std::result::Result<T, upnp::Error>;

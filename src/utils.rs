@@ -1,3 +1,6 @@
+use crate::Result;
+use roxmltree::{Document, Node};
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! args {
@@ -13,10 +16,10 @@ macro_rules! args {
 }
 
 pub trait HashMapExt {
-    fn extract(&mut self, key: &str) -> Result<String, upnp::Error>;
+    fn extract(&mut self, key: &str) -> Result<String>;
 }
 impl HashMapExt for std::collections::HashMap<String, String> {
-    fn extract(&mut self, key: &str) -> Result<String, upnp::Error> {
+    fn extract(&mut self, key: &str) -> Result<String> {
         self.remove(key).ok_or_else(|| {
             upnp::Error::XMLMissingElement("UPnP Response".to_string(), key.to_string())
         })
@@ -31,7 +34,7 @@ pub fn duration_to_str(duration: &std::time::Duration) -> String {
 
     return format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
 }
-pub fn duration_from_str(s: &str) -> Result<std::time::Duration, upnp::Error> {
+pub fn duration_from_str(s: &str) -> Result<std::time::Duration> {
     let opt = (|| {
         let mut split = s.splitn(3, ':');
         let hours = split.next()?.parse::<u64>().ok()?;
@@ -46,13 +49,11 @@ pub fn duration_from_str(s: &str) -> Result<std::time::Duration, upnp::Error> {
     opt.ok_or(upnp::Error::ParseError("invalid duration"))
 }
 
-pub fn parse_bool(s: String) -> Result<bool, upnp::Error> {
+pub fn parse_bool(s: String) -> Result<bool> {
     s.parse().map_err(upnp::Error::invalid_response)
 }
 
-use roxmltree::{Document, Node};
-
-pub fn parse_node_text(node: Node) -> Result<String, upnp::Error> {
+pub fn parse_node_text(node: Node) -> Result<String> {
     node.text()
         .ok_or_else(|| upnp::Error::XMLMissingText(node.tag_name().name().to_string()))
         .map(|x| x.to_string())
@@ -62,7 +63,7 @@ pub fn find_root_node<'a, 'input: 'a>(
     document: &'input Document,
     element: &str,
     docname: &str,
-) -> Result<Node<'a, 'input>, upnp::Error> {
+) -> Result<Node<'a, 'input>> {
     document
         .descendants()
         .filter(roxmltree::Node::is_element)
