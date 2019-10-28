@@ -1,16 +1,27 @@
+use crate::Result;
 use roxmltree::Node;
 use std::cmp::PartialEq;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
+/// This enum describes how Sonos repeats the current playlist.
 #[derive(Debug)]
 pub enum RepeatMode {
+    /// The playlist doesn't get repeated.
     None,
+    /// Only one song gets played on and on.
     One,
+    /// The whole playlist is repeated.
     All,
 }
+impl std::default::Default for RepeatMode {
+    fn default() -> Self {
+        RepeatMode::None
+    }
+}
+
 impl fmt::Display for RepeatMode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self, f)
     }
 }
@@ -19,7 +30,7 @@ impl fmt::Display for RepeatMode {
 pub struct ParseRepeatModeError;
 impl std::error::Error for ParseRepeatModeError {}
 impl std::fmt::Display for ParseRepeatModeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         "provided string was not `NONE` or `ONE` or `ALL`".fmt(f)
     }
 }
@@ -27,7 +38,7 @@ impl std::fmt::Display for ParseRepeatModeError {
 impl std::str::FromStr for RepeatMode {
     type Err = ParseRepeatModeError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s.to_lowercase().as_ref() {
             "none" => Ok(RepeatMode::None),
             "one" => Ok(RepeatMode::One),
@@ -37,6 +48,8 @@ impl std::str::FromStr for RepeatMode {
     }
 }
 
+/// A more lightweight representation of a speaker containing only the name, uuid and location.
+/// It gets returned by the [zone_group_state](struct.Speaker.html#method.zone_group_state) function.
 #[derive(Debug, Eq)]
 pub struct SpeakerInfo {
     pub(crate) name: String,
@@ -54,8 +67,9 @@ impl Hash for SpeakerInfo {
     }
 }
 
+#[allow(missing_docs)]
 impl SpeakerInfo {
-    pub(crate) fn from_xml(node: Node) -> Result<Self, upnp::Error> {
+    pub(crate) fn from_xml(node: Node<'_, '_>) -> Result<Self> {
         let mut uuid = None;
         let mut name = None;
         let mut location = None;

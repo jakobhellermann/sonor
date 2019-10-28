@@ -53,13 +53,13 @@ pub fn parse_bool(s: String) -> Result<bool> {
     s.parse().map_err(upnp::Error::invalid_response)
 }
 
-pub fn parse_node_text(node: Node) -> Result<String> {
+pub fn parse_node_text(node: Node<'_, '_>) -> Result<String> {
     node.text()
         .ok_or_else(|| upnp::Error::XMLMissingText(node.tag_name().name().to_string()))
         .map(|x| x.to_string())
 }
 
-pub fn find_node_attribute(node: Node, parent: &str, attr: &str) -> Result<String> {
+pub fn find_node_attribute(node: Node<'_, '_>, parent: &str, attr: &str) -> Result<String> {
     node.attributes()
         .iter()
         .find(|a| a.name().eq_ignore_ascii_case(attr))
@@ -69,7 +69,7 @@ pub fn find_node_attribute(node: Node, parent: &str, attr: &str) -> Result<Strin
 }
 
 pub fn find_root_node<'a, 'input: 'a>(
-    document: &'input Document,
+    document: &'input Document<'input>,
     element: &str,
     docname: &str,
 ) -> Result<Node<'a, 'input>> {

@@ -1,22 +1,20 @@
 use async_std::task;
 use sonos::Speaker;
+use std::time::Duration;
 
-type Result<T> = std::result::Result<T, sonos::upnp::Error>;
+type Result<T> = std::result::Result<T, sonos::Error>;
 
 fn main() {
-    let fut = async {
-        let speaker = Speaker::from_ip([192, 168, 2, 58].into())
-            .await?
-            .expect("ip is sonos device");
-        print_speaker_info(speaker).await
-    };
-
-    if let Err(e) = task::block_on(fut) {
+    if let Err(e) = task::block_on(print_speaker_info()) {
         eprintln!("{}", e);
     }
 }
 
-async fn print_speaker_info(speaker: Speaker) -> Result<()> {
+async fn print_speaker_info() -> Result<()> {
+    let speaker = sonos::find("jakob", Duration::from_secs(3))
+        .await?
+        .expect("speaker exists");
+
     general(&speaker).await?;
     currently_playing(&speaker).await?;
     equalizer(&speaker).await?;

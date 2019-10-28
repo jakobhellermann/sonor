@@ -3,7 +3,7 @@ use crate::utils::{self, HashMapExt};
 use crate::{args, Result};
 use crate::{RepeatMode, SpeakerInfo};
 
-use upnp::ssdp_client::URN;
+use upnp::ssdp::URN;
 use upnp::Device;
 
 use roxmltree::{Document, Node};
@@ -23,11 +23,15 @@ const QUEUE: &URN = &URN::service("schemas-sonos-com", "Queue", 1);
 const DEFAULT_ARGS: &str = "<InstanceID>0</InstanceID>";
 
 #[derive(Debug)]
-/// A sonos speaker.
+/// A sonos speaker, wrapping a UPnP-Device and providing user-oriented methods in an asynyronous
+/// API.
 pub struct Speaker(Device);
 
+#[allow(missing_docs)]
 impl Speaker {
-    /// create a speaker from an already found UPnP-Device
+    /// Creates a speaker from an already found UPnP-Device.
+    /// Returns `None` when the URN type doesn't match the `schemas-upnp-org:device:ZonePlayer:1`,
+    /// which is used by sonos devices.
     pub fn from_device(device: Device) -> Option<Self> {
         if device.device_type() == &SONOS_URN {
             Some(Self(device))
@@ -36,8 +40,8 @@ impl Speaker {
         }
     }
 
-    /// create a speaker from an IPv4 address.
-    /// returns `Ok(None)` when the device was found but isn't a sonos player.
+    /// Creates a speaker from an IPv4 address.
+    /// It returns `Ok(None)` when the device was found but isn't a sonos player.
     pub async fn from_ip(addr: Ipv4Addr) -> Result<Option<Self>> {
         let uri = format!("http://{}:1400/xml/device_description.xml", addr)
             .parse()
@@ -61,7 +65,8 @@ impl Speaker {
             .find(|speaker_info| self.0.url() == speaker_info.location())
             .map(|speaker_info| speaker_info.uuid);
 
-        Ok(uuid.expect("TODO"))
+        Ok(uuid
+            .expect("asked for zone group state but the speaker doesn't seem to be included there"))
     }
 
     // AV_TRANSPORT
@@ -101,7 +106,7 @@ impl Speaker {
             args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::duration_to_str(time)};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
-    pub async fn go_to_track(&self, track_no: u32) -> Result<()> {
+    pub async fn play_queue_item(&self, track_no: u32) -> Result<()> {
         let args = args! { "InstanceID": 0, "Unit": "TRACK_NR", "Target": track_no + 1};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
@@ -304,6 +309,30 @@ impl Speaker {
             .collect()
     }
 
+    // TODO test the next ones
+    pub async fn remove_track(&self, track_no: u32) -> Result<()> {
+        let args = args! { "InstanceID": 0, "ObjectID": format!("Q:0/{}", track_no + 1) };
+        self.action(AV_TRANSPORT, "RemoveTrackFromQueue", args)
+            .await
+            .map(drop)
+    }
+
+    /// Enqueues a track at the end of the queue.
+    pub async fn queue_end(&self, uri: &str) -> Result<()> {
+        let args = args! { "InstanceID": 0, "EnqueuedURI": uri, "EnqueuedURIMetaDate": "", "DesiredFirstTrackNumberEnqueued": 0, "EnqueueAsNext": 0 };
+        self.action(AV_TRANSPORT, "AddURIToQueue", args)
+            .await
+            .map(drop)
+    }
+
+    /// Enqueues a track as the next one.
+    pub async fn queue_next(&self, uri: &str) -> Result<()> {
+        let args = args! { "InstanceID": 0, "EnqueuedURI": uri, "EnqueuedURIMetaDate": "", "DesiredFirstTrackNumberEnqueued": 0, "EnqueueAsNext": 1 };
+        self.action(AV_TRANSPORT, "AddURIToQueue", args)
+            .await
+            .map(drop)
+    }
+
     pub async fn clear_queue(&self) -> Result<()> {
         self.action(AV_TRANSPORT, "RemoveAllTracksFromQueue", DEFAULT_ARGS)
             .await
@@ -341,9 +370,9 @@ impl Speaker {
         Ok(self._zone_group_state().await?.into_iter().collect())
     }
 
-    /// From a group with a player.
-    /// The uuid should not contain the `x-rincon:` part of the identifier.
-    pub async fn join_uuid(&self, uuid: &str) -> Result<()> {
+    /// Form a group with a player.
+    /// The UUID should look like this: 'RINCON_000E5880EA7601400'.
+    async fn join_uuid(&self, uuid: &str) -> Result<()> {
         let args = args! { "InstanceID": 0, "CurrentURI": format!("x-rincon:{}", uuid), "CurrentURIMetaData": "" };
         self.action(AV_TRANSPORT, "SetAVTransportURI", args)
             .await
@@ -369,6 +398,8 @@ impl Speaker {
         }
     }
 
+    /// Leave the current group.
+    /// Does nothing when the speaker already has no group.
     pub async fn leave(&self) -> Result<()> {
         self.action(
             AV_TRANSPORT,
@@ -395,7 +426,7 @@ impl Speaker {
     }
 }
 
-#[cfg(test)]
+#[cfg(FALSE)]
 mod tests {
     extern crate test;
 

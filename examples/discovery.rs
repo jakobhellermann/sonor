@@ -7,7 +7,7 @@ fn main() {
     }
 }
 
-async fn discover() -> Result<(), sonos::upnp::Error> {
+async fn discover() -> Result<(), sonos::Error> {
     let devices = sonos::discover(Duration::from_secs(2)).await?;
 
     futures::pin_mut!(devices);

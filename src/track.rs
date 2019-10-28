@@ -1,7 +1,9 @@
-use crate::utils;
+use crate::{utils, Result};
 use roxmltree::Node;
 use std::time::Duration;
 
+/// A [Track](struct.Track.html) with some metadata like the track number, its duration and the
+/// elapsed time.
 #[derive(Debug)]
 pub struct TrackInfo {
     track: Track,
@@ -9,8 +11,10 @@ pub struct TrackInfo {
     duration: Duration,
     elapsed: Duration,
 }
+
+#[allow(missing_docs)]
 impl TrackInfo {
-    pub fn new(track: Track, track_no: u32, duration: Duration, played: Duration) -> Self {
+    pub(crate) fn new(track: Track, track_no: u32, duration: Duration, played: Duration) -> Self {
         Self {
             track,
             track_no,
@@ -33,6 +37,9 @@ impl TrackInfo {
     }
 }
 
+/// The track struct contains information about the music in UPnP music players.
+/// It always has a title and an URI, but sometimes there is a creator, album or duration specified
+/// too.
 #[derive(Debug)]
 pub struct Track {
     title: String,
@@ -42,8 +49,27 @@ pub struct Track {
     uri: String,
 }
 
+#[allow(missing_docs)]
+impl Track {
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+    pub fn creator(&self) -> Option<&str> {
+        self.creator.as_deref()
+    }
+    pub fn album(&self) -> Option<&str> {
+        self.album.as_deref()
+    }
+    pub fn duration(&self) -> Option<&Duration> {
+        self.duration.as_ref()
+    }
+    pub fn uri(&self) -> &str {
+        &self.uri
+    }
+}
+
 impl std::fmt::Display for Track {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", &self.title)?;
         if let Some(creator) = &self.creator {
             write!(f, " - {}", creator)?;
@@ -56,7 +82,7 @@ impl std::fmt::Display for Track {
 }
 
 impl Track {
-    pub(crate) fn from_xml(node: Node) -> Result<Self, upnp::Error> {
+    pub(crate) fn from_xml(node: Node<'_, '_>) -> Result<Self> {
         let mut title = None;
         let mut creator = None;
         let mut album = None;

@@ -11,3 +11,6 @@ roxmltree = "0.7.1"
 
 [dev-dependencies]
 async-std = "0.99.10"
+
+[patch.crates-io]
+isahc = { git = "https://github.com/sagebind/isahc" }
