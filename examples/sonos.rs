@@ -1,40 +1,37 @@
-use futures::prelude::*;
+use async_std::task;
 use sonos::Speaker;
-use std::time::Duration;
+
+type Result<T> = std::result::Result<T, sonos::upnp::Error>;
 
 fn main() {
-    if let Err(e) = async_std::task::block_on(sonos()) {
+    let fut = async {
+        let speaker = Speaker::from_ip([192, 168, 2, 58].into())
+            .await?
+            .expect("ip is sonos device");
+        print_speaker_info(speaker).await
+    };
+
+    if let Err(e) = task::block_on(fut) {
         eprintln!("{}", e);
     }
 }
 
-async fn sonos() -> Result<(), upnp::Error> {
-    let speaker = my_speaker().await?;
-    if let Some(speaker) = speaker {
-        print_speaker_info(speaker).await?;
-    }
+async fn print_speaker_info(speaker: Speaker) -> Result<()> {
+    general(&speaker).await?;
+    currently_playing(&speaker).await?;
+    equalizer(&speaker).await?;
+    group_state(&speaker).await?;
 
     Ok(())
 }
 
-#[allow(unused)]
-async fn my_speaker() -> Result<Option<Speaker>, upnp::Error> {
-    Speaker::from_ip([192, 168, 2, 58].into())
-        .await
-        .map(|x| Some(x.expect("ip is sonos device")))
-}
-#[allow(unused)]
-async fn find_speaker() -> Result<Option<Speaker>, upnp::Error> {
-    let stream = sonos::discover(Duration::from_secs(3)).await?;
-    pin_utils::pin_mut!(stream);
-
-    stream.next().await.transpose()
+async fn general(speaker: &Speaker) -> Result<()> {
+    println!("- Name: {}", speaker.name().await?);
+    println!();
+    Ok(())
 }
 
-async fn print_speaker_info(speaker: Speaker) -> Result<(), sonos::upnp::Error> {
-    let name = speaker.name().await?;
-    println!("- Name: {}", name);
-
+async fn currently_playing(speaker: &Speaker) -> Result<()> {
     let track_info = speaker.track().await?;
     if let Some(track_info) = track_info {
         println!("- Currently playing '{}'", track_info.track());
@@ -53,23 +50,26 @@ async fn print_speaker_info(speaker: Speaker) -> Result<(), sonos::upnp::Error> 
     }
     println!("  - ...\n");
 
+    Ok(())
+}
+
+async fn equalizer(_speaker: &Speaker) -> Result<()> {
+    Ok(())
+}
+
+async fn group_state(speaker: &Speaker) -> Result<()> {
     println!("Groups: ");
-    let groups = speaker.group_topology().await?;
+    let groups = speaker.zone_group_state().await?;
     for (coordinator, speakers) in groups {
         let coordinator = speakers
             .iter()
             .find(|s| s.uuid().eq_ignore_ascii_case(&coordinator))
             .expect("no coordinator for group");
-        println!(
-            " - {}:{} @ {}:",
-            coordinator.room_name(),
-            coordinator.uuid(),
-            coordinator.location()
-        );
+
+        println!(" - {} : {}", coordinator.name(), coordinator.uuid());
         for speaker in speakers {
-            println!("   - {}", speaker.room_name());
+            println!("   - {} : {}", speaker.name(), speaker.uuid());
         }
     }
-
     Ok(())
 }

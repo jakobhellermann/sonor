@@ -1,5 +1,5 @@
 use crate::Result;
-use roxmltree::{Document, Node};
+use roxmltree::{Attribute, Document, Node};
 
 #[doc(hidden)]
 #[macro_export]
@@ -56,6 +56,15 @@ pub fn parse_bool(s: String) -> Result<bool> {
 pub fn parse_node_text(node: Node) -> Result<String> {
     node.text()
         .ok_or_else(|| upnp::Error::XMLMissingText(node.tag_name().name().to_string()))
+        .map(|x| x.to_string())
+}
+
+pub fn find_node_attribute(node: Node, parent: &str, attr: &str) -> Result<String> {
+    node.attributes()
+        .iter()
+        .find(|a| a.name().eq_ignore_ascii_case(attr))
+        .map(Attribute::value)
+        .ok_or_else(|| upnp::Error::XMLMissingElement(parent.to_string(), attr.to_string()))
         .map(|x| x.to_string())
 }
 

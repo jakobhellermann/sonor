@@ -3,17 +3,16 @@ use crate::utils::{self, HashMapExt};
 use crate::{args, Result};
 use crate::{RepeatMode, SpeakerInfo};
 
-use upnp::ssdp_client::{SearchTarget, URN};
+use upnp::ssdp_client::URN;
 use upnp::Device;
 
-use futures::prelude::*;
-use roxmltree::{Attribute, Document, Node};
+use roxmltree::{Document, Node};
 
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::time::Duration;
 
-const SONOS_URN: URN = URN::device("schemas-upnp-org", "ZonePlayer", 1);
+pub(crate) const SONOS_URN: URN = URN::device("schemas-upnp-org", "ZonePlayer", 1);
 
 const AV_TRANSPORT: &URN = &URN::service("schemas-upnp-org", "AVTransport", 1);
 const DEVICE_PROPERTIES: &URN = &URN::service("schemas-upnp-org", "DeviceProperties", 1);
@@ -25,17 +24,7 @@ const DEFAULT_ARGS: &str = "<InstanceID>0</InstanceID>";
 
 #[derive(Debug)]
 /// A sonos speaker.
-pub struct Speaker(upnp::Device);
-
-/// discover sonos players on the network and stream their responses
-pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Speaker>>> {
-    let stream = upnp::discover(&SearchTarget::URN(SONOS_URN), timeout)
-        .await?
-        .map_ok(Speaker::from_device)
-        .map_ok(|device| device.expect("searched for sonos urn but got something else"));
-
-    Ok(stream)
-}
+pub struct Speaker(Device);
 
 impl Speaker {
     /// create a speaker from an already found UPnP-Device
@@ -61,6 +50,18 @@ impl Speaker {
         self.action(DEVICE_PROPERTIES, "GetZoneAttributes", "")
             .await?
             .extract("CurrentZoneName")
+    }
+
+    pub async fn uuid(&self) -> Result<String> {
+        let uuid = self
+            ._zone_group_state()
+            .await?
+            .into_iter()
+            .flat_map(|(_, speakers)| speakers)
+            .find(|speaker_info| self.0.url() == speaker_info.location())
+            .map(|speaker_info| speaker_info.uuid);
+
+        Ok(uuid.expect("TODO"))
     }
 
     // AV_TRANSPORT
@@ -309,8 +310,7 @@ impl Speaker {
             .map(drop)
     }
 
-    /// Returns a map of all discovered devices in the network to their respective information
-    pub async fn group_topology(&self) -> Result<HashMap<String, Vec<SpeakerInfo>>> {
+    pub(crate) async fn _zone_group_state(&self) -> Result<Vec<(String, Vec<SpeakerInfo>)>> {
         let state = self
             .action(ZONE_GROUP_TOPOLOGY, "GetZoneGroupState", "")
             .await?
@@ -323,37 +323,52 @@ impl Speaker {
             .children()
             .filter(Node::is_element)
             .filter(|c| c.tag_name().name().eq_ignore_ascii_case("ZoneGroup"))
-            .map(|node| {
-                let coordinator = node
-                    .attributes()
-                    .iter()
-                    .find(|a| a.name().eq_ignore_ascii_case("coordinator"))
-                    .map(Attribute::value)
-                    .ok_or_else(|| {
-                        upnp::Error::XMLMissingElement("ZoneGroup".into(), "Coordinator".into())
-                    })?
-                    .to_string();
-
-                let members = node
+            .map(|group| {
+                let coordinator = utils::find_node_attribute(group, "ZoneGroup", "Coordinator")?;
+                let members = group
                     .children()
                     .filter(Node::is_element)
                     .filter(|c| c.tag_name().name().eq_ignore_ascii_case("ZoneGroupMember"))
                     .map(SpeakerInfo::from_xml)
                     .collect::<Result<Vec<_>>>()?;
-
                 Ok((coordinator, members))
             })
             .collect()
     }
 
+    /// Returns a map of all discovered devices in the network to their respective information
+    pub async fn zone_group_state(&self) -> Result<HashMap<String, Vec<SpeakerInfo>>> {
+        Ok(self._zone_group_state().await?.into_iter().collect())
+    }
+
     /// From a group with a player.
     /// The uuid should not contain the `x-rincon:` part of the identifier.
-    pub async fn join(&self, uuid: &str) -> Result<()> {
+    pub async fn join_uuid(&self, uuid: &str) -> Result<()> {
         let args = args! { "InstanceID": 0, "CurrentURI": format!("x-rincon:{}", uuid), "CurrentURIMetaData": "" };
-        self.action(AV_TRANSPORT, "SetAV_TRANSPORTURI", args)
+        self.action(AV_TRANSPORT, "SetAVTransportURI", args)
             .await
             .map(drop)
     }
+
+    /// Form a group with a player.
+    /// Returns `false` when no player with that roomname exists.
+    /// `roomname` is compared case insensitively.
+    pub async fn join(&self, roomname: &str) -> Result<bool> {
+        let topology = self._zone_group_state().await?;
+        let uuid = topology
+            .iter()
+            .flat_map(|(_, speakers)| speakers)
+            .find(|speaker_info| speaker_info.name().eq_ignore_ascii_case(roomname))
+            .map(SpeakerInfo::uuid);
+
+        if let Some(uuid) = uuid {
+            self.join_uuid(uuid).await?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
     pub async fn leave(&self) -> Result<()> {
         self.action(
             AV_TRANSPORT,
@@ -377,5 +392,48 @@ impl Speaker {
             .unwrap_or_else(|| panic!(format!("expected service '{}'", service)))
             .action(self.0.url(), action, payload)
             .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate test;
+
+    use crate::discovery;
+    use async_std::task::block_on;
+    use futures::prelude::*;
+    use std::time::Duration;
+    use test::Bencher;
+
+    const TIMEOUT: Duration = Duration::from_secs(1);
+
+    #[bench]
+    fn discover_stream_collect(b: &mut Bencher) {
+        b.iter(|| {
+            block_on(async {
+                let vec: Vec<_> = discovery::discover_simple(TIMEOUT)
+                    .await
+                    .unwrap()
+                    .try_collect()
+                    .await
+                    .unwrap();
+                assert_eq!(vec.len(), 2);
+            })
+        })
+    }
+
+    #[bench]
+    fn discover_efficient(b: &mut Bencher) {
+        b.iter(|| {
+            block_on(async {
+                let vec: Vec<_> = discovery::discover(TIMEOUT)
+                    .await
+                    .unwrap()
+                    .try_collect()
+                    .await
+                    .unwrap();
+                assert_eq!(vec.len(), 2);
+            })
+        })
     }
 }
