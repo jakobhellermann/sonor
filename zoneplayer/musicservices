@@ -1,0 +1,14 @@
+StateVars {
+  A_ARG_TYPE_ServiceDescriptorList
+  A_ARG_TYPE_ServiceTypeList
+  ServiceId
+  ServiceListVersion
+  SessionId
+  Username
+}
+
+Actions {
+  GetSessionId(ServiceId: ui4, Username: String) -> (SessionId: String)
+  ListAvailableServices() -> (AvailableServiceDescriptorList: String, AvailableServiceTypeList: String, AvailableServiceListVersion: String)
+  UpdateAvailableServices()
+}

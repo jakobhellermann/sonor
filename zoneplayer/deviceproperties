@@ -1,0 +1,84 @@
+StateVars {
+  HouseholdID
+  SettingsReplicationState
+  ZoneName
+  Icon
+  Configuration
+  Invisible
+  IsZoneBridge
+  AirPlayEnabled
+  SupportsAudioIn
+  SupportsAudioClip
+  IsIdle
+  MoreInfo
+  ChannelMapSet
+  HTSatChanMapSet
+  HTFreq
+  HTBondedZoneCommitState
+  Orientation
+  LastChangedPlayState
+  RoomCalibrationState
+  AvailableRoomCalibration
+  SatRoomUUID
+  LEDState
+  SerialNumber
+  SoftwareVersion
+  DisplaySoftwareVersion
+  HardwareVersion
+  IPAddress
+  MACAddress
+  CopyrightInfo
+  ExtraInfo
+  HTAudioIn
+  Flags
+  AutoplayIncludeLinkedZones
+  AutoplayRoomUUID
+  AutoplaySource
+  AutoplayVolume
+  AutoplayUseVolume
+  TVConfigurationError
+  HdmiCecAvailable
+  WirelessMode
+  WirelessLeafOnly
+  HasConfiguredSSID
+  ChannelFreq
+  BehindWifiExtender
+  WifiEnabled
+  ConfigMode
+  SecureRegState
+  A_ARG_TYPE_ConfigModeOptions
+  A_ARG_TYPE_ConfigModeState
+  A_ARG_TYPE_ButtonState
+  ButtonLockState
+  VoiceConfigState
+  MicEnabled
+  KeepGrouped
+}
+
+Actions {
+  SetLEDState(DesiredLEDState: [On, Off])
+  GetLEDState() -> (CurrentLEDState: [On, Off])
+  AddBondedZones(ChannelMapSet: String)
+  RemoveBondedZones(ChannelMapSet: String, KeepGrouped: Boolean)
+  CreateStereoPair(ChannelMapSet: String)
+  SeparateStereoPair(ChannelMapSet: String)
+  SetZoneAttributes(DesiredZoneName: String, DesiredIcon: String, DesiredConfiguration: String)
+  GetZoneAttributes() -> (CurrentZoneName: String, CurrentIcon: String, CurrentConfiguration: String)
+  GetHouseholdID() -> (CurrentHouseholdID: String)
+  GetZoneInfo() -> (SerialNumber: String, SoftwareVersion: String, DisplaySoftwareVersion: String, HardwareVersion: String, IPAddress: String, MACAddress: String, CopyrightInfo: String, ExtraInfo: String, HTAudioIn: ui4, Flags: ui4)
+  SetAutoplayLinkedZones(IncludeLinkedZones: Boolean, Source: String)
+  GetAutoplayLinkedZones(Source: String) -> (IncludeLinkedZones: Boolean)
+  SetAutoplayRoomUUID(RoomUUID: String, Source: String)
+  GetAutoplayRoomUUID(Source: String) -> (RoomUUID: String)
+  SetAutoplayVolume(Volume: 0..=100, Source: String)
+  GetAutoplayVolume(Source: String) -> (CurrentVolume: 0..=100)
+  SetUseAutoplayVolume(UseVolume: Boolean, Source: String)
+  GetUseAutoplayVolume(Source: String) -> (UseVolume: Boolean)
+  AddHTSatellite(HTSatChanMapSet: String)
+  RemoveHTSatellite(SatRoomUUID: String)
+  EnterConfigMode(Mode: String, Options: String) -> (State: String)
+  ExitConfigMode(Options: String)
+  GetButtonState() -> (State: String)
+  SetButtonLockState(DesiredButtonLockState: [On, Off])
+  GetButtonLockState() -> (CurrentButtonLockState: [On, Off])
+}

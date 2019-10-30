@@ -1,0 +1,128 @@
+StateVars {
+  TransportState
+  TransportStatus
+  TransportErrorDescription
+  TransportErrorURI
+  TransportErrorHttpCode
+  TransportErrorHttpHeaders
+  PlaybackStorageMedium
+  RecordStorageMedium
+  PossiblePlaybackStorageMedia
+  PossibleRecordStorageMedia
+  CurrentPlayMode
+  CurrentCrossfadeMode
+  TransportPlaySpeed
+  RecordMediumWriteStatus
+  CurrentRecordQualityMode
+  PossibleRecordQualityModes
+  NumberOfTracks
+  CurrentTrack
+  CurrentSection
+  CurrentTrackDuration
+  CurrentMediaDuration
+  CurrentTrackMetaData
+  CurrentTrackURI
+  AVTransportURI
+  AVTransportURIMetaData
+  NextAVTransportURI
+  NextAVTransportURIMetaData
+  RelativeTimePosition
+  AbsoluteTimePosition
+  RelativeCounterPosition
+  AbsoluteCounterPosition
+  CurrentTransportActions
+  SleepTimerGeneration
+  SnoozeRunning
+  AlarmRunning
+  AlarmIDRunning
+  AlarmLoggedStartTime
+  RestartPending
+  LastChange
+  NextTrackMetaData
+  NextTrackURI
+  EnqueuedTransportURIMetaData
+  EnqueuedTransportURI
+  CurrentValidPlayModes
+  MuseSessions
+  DirectControlClientID
+  DirectControlAccountID
+  DirectControlIsSuspended
+  A_ARG_TYPE_SeekMode
+  A_ARG_TYPE_SeekTarget
+  A_ARG_TYPE_InstanceID
+  A_ARG_TYPE_MemberList
+  A_ARG_TYPE_TransportSettings
+  A_ARG_TYPE_CurrentAVTransportURI
+  A_ARG_TYPE_SourceState
+  A_ARG_TYPE_VLIState
+  A_ARG_TYPE_Queue
+  A_ARG_TYPE_MemberID
+  A_ARG_TYPE_URI
+  A_ARG_TYPE_LIST_URI
+  A_ARG_TYPE_URIMetaData
+  A_ARG_TYPE_LIST_URIMetaData
+  A_ARG_TYPE_ObjectID
+  A_ARG_TYPE_GroupID
+  A_ARG_TYPE_PlayerID
+  A_ARG_TYPE_TrackNumber
+  A_ARG_TYPE_NumTracks
+  A_ARG_TYPE_NumTracksChange
+  A_ARG_TYPE_EnqueueAsNext
+  A_ARG_TYPE_SavedQueueTitle
+  A_ARG_TYPE_ResumePlayback
+  A_ARG_TYPE_ISO8601Time
+  A_ARG_TYPE_AlarmVolume
+  A_ARG_TYPE_AlarmIncludeLinkedZones
+  A_ARG_TYPE_ResetVolumeAfter
+  A_ARG_TYPE_SleepTimerState
+  A_ARG_TYPE_AlarmState
+  A_ARG_TYPE_StreamRestartState
+  A_ARG_TYPE_RejoinGroup
+  QueueUpdateID
+  A_ARG_TYPE_TrackList
+}
+
+Actions {
+  SetAVTransportURI(InstanceID: ui4, CurrentURI: String, CurrentURIMetaData: String)
+  SetNextAVTransportURI(InstanceID: ui4, NextURI: String, NextURIMetaData: String)
+  AddURIToQueue(InstanceID: ui4, EnqueuedURI: String, EnqueuedURIMetaData: String, DesiredFirstTrackNumberEnqueued: ui4, EnqueueAsNext: Boolean) -> (FirstTrackNumberEnqueued: ui4, NumTracksAdded: ui4, NewQueueLength: ui4)
+  AddMultipleURIsToQueue(InstanceID: ui4, UpdateID: ui4, NumberOfURIs: ui4, EnqueuedURIs: String, EnqueuedURIsMetaData: String, ContainerURI: String, ContainerMetaData: String, DesiredFirstTrackNumberEnqueued: ui4, EnqueueAsNext: Boolean) -> (FirstTrackNumberEnqueued: ui4, NumTracksAdded: ui4, NewQueueLength: ui4, NewUpdateID: ui4)
+  ReorderTracksInQueue(InstanceID: ui4, StartingIndex: ui4, NumberOfTracks: ui4, InsertBefore: ui4, UpdateID: ui4)
+  RemoveTrackFromQueue(InstanceID: ui4, ObjectID: String, UpdateID: ui4)
+  RemoveTrackRangeFromQueue(InstanceID: ui4, UpdateID: ui4, StartingIndex: ui4, NumberOfTracks: ui4) -> (NewUpdateID: ui4)
+  RemoveAllTracksFromQueue(InstanceID: ui4)
+  SaveQueue(InstanceID: ui4, Title: String, ObjectID: String) -> (AssignedObjectID: String)
+  BackupQueue(InstanceID: ui4)
+  CreateSavedQueue(InstanceID: ui4, Title: String, EnqueuedURI: String, EnqueuedURIMetaData: String) -> (NumTracksAdded: ui4, NewQueueLength: ui4, AssignedObjectID: String, NewUpdateID: ui4)
+  AddURIToSavedQueue(InstanceID: ui4, ObjectID: String, UpdateID: ui4, EnqueuedURI: String, EnqueuedURIMetaData: String, AddAtIndex: ui4) -> (NumTracksAdded: ui4, NewQueueLength: ui4, NewUpdateID: ui4)
+  ReorderTracksInSavedQueue(InstanceID: ui4, ObjectID: String, UpdateID: ui4, TrackList: String, NewPositionList: String) -> (QueueLengthChange: i4, NewQueueLength: ui4, NewUpdateID: ui4)
+  GetMediaInfo(InstanceID: ui4) -> (NrTracks: 0..=65535, MediaDuration: String, CurrentURI: String, CurrentURIMetaData: String, NextURI: String, NextURIMetaData: String, PlayMedium: [NONE, NETWORK], RecordMedium: [NONE], WriteStatus: String)
+  GetTransportInfo(InstanceID: ui4) -> (CurrentTransportState: [STOPPED, PLAYING, PAUSED_PLAYBACK, TRANSITIONING], CurrentTransportStatus: String, CurrentSpeed: [1])
+  GetPositionInfo(InstanceID: ui4) -> (Track: 0..=65535, TrackDuration: String, TrackMetaData: String, TrackURI: String, RelTime: String, AbsTime: String, RelCount: i4, AbsCount: i4)
+  GetDeviceCapabilities(InstanceID: ui4) -> (PlayMedia: String, RecMedia: String, RecQualityModes: String)
+  GetTransportSettings(InstanceID: ui4) -> (PlayMode: [NORMAL, REPEAT_ALL, REPEAT_ONE, SHUFFLE_NOREPEAT, SHUFFLE, SHUFFLE_REPEAT_ONE] = NORMAL, RecQualityMode: String)
+  GetCrossfadeMode(InstanceID: ui4) -> (CrossfadeMode: Boolean)
+  Stop(InstanceID: ui4)
+  Play(InstanceID: ui4, Speed: [1])
+  Pause(InstanceID: ui4)
+  Seek(InstanceID: ui4, Unit: [TRACK_NR, REL_TIME, TIME_DELTA], Target: String)
+  Next(InstanceID: ui4)
+  Previous(InstanceID: ui4)
+  SetPlayMode(InstanceID: ui4, NewPlayMode: [NORMAL, REPEAT_ALL, REPEAT_ONE, SHUFFLE_NOREPEAT, SHUFFLE, SHUFFLE_REPEAT_ONE] = NORMAL)
+  SetCrossfadeMode(InstanceID: ui4, CrossfadeMode: Boolean)
+  NotifyDeletedURI(InstanceID: ui4, DeletedURI: String)
+  GetCurrentTransportActions(InstanceID: ui4) -> (Actions: String)
+  BecomeCoordinatorOfStandaloneGroup(InstanceID: ui4) -> (DelegatedGroupCoordinatorID: String, NewGroupID: String)
+  DelegateGroupCoordinationTo(InstanceID: ui4, NewCoordinator: String, RejoinGroup: Boolean)
+  BecomeGroupCoordinator(InstanceID: ui4, CurrentCoordinator: String, CurrentGroupID: String, OtherMembers: String, TransportSettings: String, CurrentURI: String, CurrentURIMetaData: String, SleepTimerState: String, AlarmState: String, StreamRestartState: String, CurrentQueueTrackList: String, CurrentVLIState: String)
+  BecomeGroupCoordinatorAndSource(InstanceID: ui4, CurrentCoordinator: String, CurrentGroupID: String, OtherMembers: String, CurrentURI: String, CurrentURIMetaData: String, SleepTimerState: String, AlarmState: String, StreamRestartState: String, CurrentAVTTrackList: String, CurrentQueueTrackList: String, CurrentSourceState: String, ResumePlayback: Boolean)
+  ChangeCoordinator(InstanceID: ui4, CurrentCoordinator: String, NewCoordinator: String, NewTransportSettings: String, CurrentAVTransportURI: String)
+  ChangeTransportSettings(InstanceID: ui4, NewTransportSettings: String, CurrentAVTransportURI: String)
+  ConfigureSleepTimer(InstanceID: ui4, NewSleepTimerDuration: String)
+  GetRemainingSleepTimerDuration(InstanceID: ui4) -> (RemainingSleepTimerDuration: String, CurrentSleepTimerGeneration: ui4)
+  RunAlarm(InstanceID: ui4, AlarmID: ui4, LoggedStartTime: String, Duration: String, ProgramURI: String, ProgramMetaData: String, PlayMode: [NORMAL, REPEAT_ALL, REPEAT_ONE, SHUFFLE_NOREPEAT, SHUFFLE, SHUFFLE_REPEAT_ONE] = NORMAL, Volume: ui2, IncludeLinkedZones: Boolean)
+  StartAutoplay(InstanceID: ui4, ProgramURI: String, ProgramMetaData: String, Volume: ui2, IncludeLinkedZones: Boolean, ResetVolumeAfter: Boolean)
+  GetRunningAlarmProperties(InstanceID: ui4) -> (AlarmID: ui4, GroupID: String, LoggedStartTime: String)
+  SnoozeAlarm(InstanceID: ui4, Duration: String)
+  EndDirectControlSession(InstanceID: ui4)
+}

@@ -1,0 +1,76 @@
+StateVars {
+  LastChange
+  Mute
+  Volume
+  A_ARG_TYPE_LeftVolume
+  A_ARG_TYPE_RightVolume
+  VolumeDB
+  Bass
+  Treble
+  EQValue
+  A_ARG_TYPE_EQType
+  Loudness
+  SupportsOutputFixed
+  OutputFixed
+  HeadphoneConnected
+  A_ARG_TYPE_Channel
+  A_ARG_TYPE_MuteChannel
+  A_ARG_TYPE_InstanceID
+  A_ARG_TYPE_VolumeAdjustment
+  A_ARG_TYPE_RampType
+  A_ARG_TYPE_RampTimeSeconds
+  A_ARG_TYPE_ResetVolumeAfter
+  A_ARG_TYPE_ProgramURI
+  A_ARG_TYPE_ChannelMap
+  AudioDelay
+  AudioDelayLeftRear
+  AudioDelayRightRear
+  DialogLevel
+  SpeakerSize
+  SubCrossover
+  SubEnabled
+  SubGain
+  SubPolarity
+  SurroundLevel
+  MusicSurroundLevel
+  NightMode
+  SurroundEnabled
+  SurroundMode
+  PresetNameList
+  RoomCalibrationID
+  RoomCalibrationCoefficients
+  RoomCalibrationCalibrationMode
+  RoomCalibrationEnabled
+  RoomCalibrationAvailable
+}
+
+Actions {
+  GetMute(InstanceID: ui4, Channel: [Master, LF, RF, SpeakerOnly]) -> (CurrentMute: Boolean)
+  SetMute(InstanceID: ui4, Channel: [Master, LF, RF, SpeakerOnly], DesiredMute: Boolean)
+  ResetBasicEQ(InstanceID: ui4) -> (Bass: -10..=10, Treble: -10..=10, Loudness: Boolean, LeftVolume: 0..=100, RightVolume: 0..=100)
+  ResetExtEQ(InstanceID: ui4, EQType: String)
+  GetVolume(InstanceID: ui4, Channel: [Master, LF, RF]) -> (CurrentVolume: 0..=100)
+  SetVolume(InstanceID: ui4, Channel: [Master, LF, RF], DesiredVolume: 0..=100)
+  SetRelativeVolume(InstanceID: ui4, Channel: [Master, LF, RF], Adjustment: i4) -> (NewVolume: 0..=100)
+  GetVolumeDB(InstanceID: ui4, Channel: [Master, LF, RF]) -> (CurrentVolume: i2)
+  SetVolumeDB(InstanceID: ui4, Channel: [Master, LF, RF], DesiredVolume: i2)
+  GetVolumeDBRange(InstanceID: ui4, Channel: [Master, LF, RF]) -> (MinValue: i2, MaxValue: i2)
+  GetBass(InstanceID: ui4) -> (CurrentBass: -10..=10)
+  SetBass(InstanceID: ui4, DesiredBass: -10..=10)
+  GetTreble(InstanceID: ui4) -> (CurrentTreble: -10..=10)
+  SetTreble(InstanceID: ui4, DesiredTreble: -10..=10)
+  GetEQ(InstanceID: ui4, EQType: String) -> (CurrentValue: i2)
+  SetEQ(InstanceID: ui4, EQType: String, DesiredValue: i2)
+  GetLoudness(InstanceID: ui4, Channel: [Master, LF, RF]) -> (CurrentLoudness: Boolean)
+  SetLoudness(InstanceID: ui4, Channel: [Master, LF, RF], DesiredLoudness: Boolean)
+  GetSupportsOutputFixed(InstanceID: ui4) -> (CurrentSupportsFixed: Boolean)
+  GetOutputFixed(InstanceID: ui4) -> (CurrentFixed: Boolean)
+  SetOutputFixed(InstanceID: ui4, DesiredFixed: Boolean)
+  GetHeadphoneConnected(InstanceID: ui4) -> (CurrentHeadphoneConnected: Boolean)
+  RampToVolume(InstanceID: ui4, Channel: [Master, LF, RF], RampType: [SLEEP_TIMER_RAMP_TYPE, ALARM_RAMP_TYPE, AUTOPLAY_RAMP_TYPE], DesiredVolume: 0..=100, ResetVolumeAfter: Boolean, ProgramURI: String) -> (RampTime: ui4)
+  RestoreVolumePriorToRamp(InstanceID: ui4, Channel: [Master, LF, RF])
+  SetChannelMap(InstanceID: ui4, ChannelMap: String)
+  SetRoomCalibrationX(InstanceID: ui4, CalibrationID: String, Coefficients: String, CalibrationMode: String)
+  GetRoomCalibrationStatus(InstanceID: ui4) -> (RoomCalibrationEnabled: Boolean, RoomCalibrationAvailable: Boolean)
+  SetRoomCalibrationStatus(InstanceID: ui4, RoomCalibrationEnabled: Boolean)
+}

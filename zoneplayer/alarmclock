@@ -1,0 +1,44 @@
+StateVars {
+  A_ARG_TYPE_ISO8601Time
+  A_ARG_TYPE_Recurrence
+  A_ARG_TYPE_AlarmID
+  A_ARG_TYPE_AlarmList
+  A_ARG_TYPE_AlarmEnabled
+  A_ARG_TYPE_AlarmProgramURI
+  A_ARG_TYPE_AlarmProgramMetaData
+  A_ARG_TYPE_AlarmPlayMode
+  A_ARG_TYPE_AlarmVolume
+  A_ARG_TYPE_AlarmIncludeLinkedZones
+  A_ARG_TYPE_AlarmRoomUUID
+  A_ARG_TYPE_TimeZoneIndex
+  A_ARG_TYPE_TimeZoneAutoAdjustDst
+  A_ARG_TYPE_TimeZoneInformation
+  A_ARG_TYPE_TimeStamp
+  TimeZone
+  TimeServer
+  TimeGeneration
+  AlarmListVersion
+  DailyIndexRefreshTime
+  TimeFormat
+  DateFormat
+}
+
+Actions {
+  SetFormat(DesiredTimeFormat: String, DesiredDateFormat: String)
+  GetFormat() -> (CurrentTimeFormat: String, CurrentDateFormat: String)
+  SetTimeZone(Index: i4, AutoAdjustDst: Boolean)
+  GetTimeZone() -> (Index: i4, AutoAdjustDst: Boolean)
+  GetTimeZoneAndRule() -> (Index: i4, AutoAdjustDst: Boolean, CurrentTimeZone: String)
+  GetTimeZoneRule(Index: i4) -> (TimeZone: String)
+  SetTimeServer(DesiredTimeServer: String)
+  GetTimeServer() -> (CurrentTimeServer: String)
+  SetTimeNow(DesiredTime: String, TimeZoneForDesiredTime: String)
+  GetHouseholdTimeAtStamp(TimeStamp: String) -> (HouseholdUTCTime: String)
+  GetTimeNow() -> (CurrentUTCTime: String, CurrentLocalTime: String, CurrentTimeZone: String, CurrentTimeGeneration: ui4)
+  CreateAlarm(StartLocalTime: String, Duration: String, Recurrence: [ONCE, WEEKDAYS, WEEKENDS, DAILY], Enabled: Boolean, RoomUUID: String, ProgramURI: String, ProgramMetaData: String, PlayMode: [NORMAL, REPEAT_ALL, SHUFFLE_NOREPEAT, SHUFFLE] = NORMAL, Volume: ui2, IncludeLinkedZones: Boolean) -> (AssignedID: ui4)
+  UpdateAlarm(ID: ui4, StartLocalTime: String, Duration: String, Recurrence: [ONCE, WEEKDAYS, WEEKENDS, DAILY], Enabled: Boolean, RoomUUID: String, ProgramURI: String, ProgramMetaData: String, PlayMode: [NORMAL, REPEAT_ALL, SHUFFLE_NOREPEAT, SHUFFLE] = NORMAL, Volume: ui2, IncludeLinkedZones: Boolean)
+  DestroyAlarm(ID: ui4)
+  ListAlarms() -> (CurrentAlarmList: String, CurrentAlarmListVersion: String)
+  SetDailyIndexRefreshTime(DesiredDailyIndexRefreshTime: String)
+  GetDailyIndexRefreshTime() -> (CurrentDailyIndexRefreshTime: String)
+}

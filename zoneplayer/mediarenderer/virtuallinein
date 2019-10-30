@@ -1,0 +1,23 @@
+StateVars {
+  A_ARG_TYPE_InstanceID
+  A_ARG_TYPE_PlayerID
+  A_ARG_TYPE_Volume
+  A_ARG_TYPE_CurrentTransportSettings
+  A_ARG_TYPE_Speed
+  CurrentTrackMetaData
+  EnqueuedTransportURIMetaData
+  AVTransportURIMetaData
+  CurrentTransportActions
+  LastChange
+}
+
+Actions {
+  StartTransmission(InstanceID: ui4, CoordinatorID: String) -> (CurrentTransportSettings: String)
+  StopTransmission(InstanceID: ui4, CoordinatorID: String)
+  Play(InstanceID: ui4, Speed: String)
+  Pause(InstanceID: ui4)
+  Next(InstanceID: ui4)
+  Previous(InstanceID: ui4)
+  Stop(InstanceID: ui4)
+  SetVolume(InstanceID: ui4, DesiredVolume: ui2)
+}

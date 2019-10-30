@@ -1,0 +1,45 @@
+StateVars {
+  A_ARG_TYPE_VariableName
+  A_ARG_TYPE_VariableStringValue
+  A_ARG_TYPE_AccountType
+  A_ARG_TYPE_AccountUID
+  A_ARG_TYPE_AccountUDN
+  A_ARG_TYPE_AccountID
+  A_ARG_TYPE_AccountPassword
+  A_ARG_TYPE_AccountNickname
+  A_ARG_TYPE_AccountCredential
+  A_ARG_TYPE_AccountMd
+  A_ARG_TYPE_IsExpired
+  A_ARG_TYPE_StubsCreated
+  A_ARG_TYPE_RDMEnabled
+  A_ARG_TYPE_OAuthDeviceID
+  A_ARG_TYPE_AuthorizationCode
+  A_ARG_TYPE_UserIdHashCode
+  A_ARG_TYPE_AccountTier
+  A_ARG_TYPE_RedirectURI
+  CustomerID
+  UpdateID
+  UpdateIDX
+  VoiceUpdateID
+  ThirdPartyHash
+}
+
+Actions {
+  SetString(VariableName: String, StringValue: String)
+  GetString(VariableName: String) -> (StringValue: String)
+  Remove(VariableName: String)
+  GetWebCode(AccountType: ui4) -> (WebCode: String)
+  ProvisionCredentialedTrialAccountX(AccountType: ui4, AccountID: String, AccountPassword: String) -> (IsExpired: Boolean, AccountUDN: String)
+  AddAccountX(AccountType: ui4, AccountID: String, AccountPassword: String) -> (AccountUDN: String)
+  AddOAuthAccountX(AccountType: ui4, AccountToken: String, AccountKey: String, OAuthDeviceID: String, AuthorizationCode: String, RedirectURI: String, UserIdHashCode: String, AccountTier: ui4) -> (AccountUDN: String, AccountNickname: String)
+  RemoveAccount(AccountType: ui4, AccountID: String)
+  EditAccountPasswordX(AccountType: ui4, AccountID: String, NewAccountPassword: String)
+  SetAccountNicknameX(AccountUDN: String, AccountNickname: String)
+  RefreshAccountCredentialsX(AccountType: ui4, AccountUID: ui4, AccountToken: String, AccountKey: String)
+  EditAccountMd(AccountType: ui4, AccountID: String, NewAccountMd: String)
+  DoPostUpdateTasks()
+  ResetThirdPartyCredentials()
+  EnableRDM(RDMValue: Boolean)
+  GetRDM() -> (RDMValue: Boolean)
+  ReplaceAccountX(AccountUDN: String, NewAccountID: String, NewAccountPassword: String, AccountToken: String, AccountKey: String, OAuthDeviceID: String) -> (NewAccountUDN: String)
+}

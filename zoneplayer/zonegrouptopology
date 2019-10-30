@@ -1,0 +1,39 @@
+StateVars {
+  AvailableSoftwareUpdate
+  ZoneGroupState
+  ThirdPartyMediaServersX
+  AlarmRunSequence
+  MuseHouseholdId
+  ZoneGroupName
+  ZoneGroupID
+  ZonePlayerUUIDsInGroup
+  A_ARG_TYPE_UpdateType
+  A_ARG_TYPE_CachedOnly
+  A_ARG_TYPE_UpdateItem
+  A_ARG_TYPE_UpdateURL
+  A_ARG_TYPE_UpdateFlags
+  A_ARG_TYPE_UpdateExtraOptions
+  A_ARG_TYPE_Version
+  A_ARG_TYPE_MemberID
+  A_ARG_TYPE_UnresponsiveDeviceActionType
+  DiagnosticID
+  A_ARG_TYPE_IncludeControllers
+  A_ARG_TYPE_Origin
+  A_ARG_TYPE_MobileDeviceName
+  A_ARG_TYPE_MobileDeviceUDN
+  A_ARG_TYPE_MobileIPAndPort
+  AreasUpdateID
+  SourceAreasUpdateID
+  NetsettingsUpdateID
+}
+
+Actions {
+  CheckForUpdate(UpdateType: [All, Software], CachedOnly: Boolean, Version: String) -> (UpdateItem: String)
+  BeginSoftwareUpdate(UpdateURL: String, Flags: ui4, ExtraOptions: String)
+  ReportUnresponsiveDevice(DeviceUUID: String, DesiredAction: [Remove, TopologyMonitorProbe, VerifyThenRemoveSystemwide])
+  ReportAlarmStartedRunning()
+  SubmitDiagnostics(IncludeControllers: Boolean, Type: String) -> (DiagnosticID: ui4)
+  RegisterMobileDevice(MobileDeviceName: String, MobileDeviceUDN: String, MobileIPAndPort: String)
+  GetZoneGroupAttributes() -> (CurrentZoneGroupName: String, CurrentZoneGroupID: String, CurrentZonePlayerUUIDsInGroup: String, CurrentMuseHouseholdId: String)
+  GetZoneGroupState() -> (ZoneGroupState: String)
+}

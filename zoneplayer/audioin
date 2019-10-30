@@ -1,0 +1,21 @@
+StateVars {
+  A_ARG_TYPE_MemberID
+  A_ARG_TYPE_TransportSettings
+  AudioInputName
+  Icon
+  LineInConnected
+  LeftLineInLevel
+  RightLineInLevel
+  A_ARG_TYPE_ObjectID
+  Playing
+}
+
+Actions {
+  StartTransmissionToGroup(CoordinatorID: String) -> (CurrentTransportSettings: String)
+  StopTransmissionToGroup(CoordinatorID: String)
+  SetAudioInputAttributes(DesiredName: String, DesiredIcon: String)
+  GetAudioInputAttributes() -> (CurrentName: String, CurrentIcon: String)
+  SetLineInLevel(DesiredLeftLineInLevel: i4, DesiredRightLineInLevel: i4)
+  GetLineInLevel() -> (CurrentLeftLineInLevel: i4, CurrentRightLineInLevel: i4)
+  SelectAudio(ObjectID: String)
+}

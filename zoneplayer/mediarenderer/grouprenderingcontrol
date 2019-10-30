@@ -1,0 +1,16 @@
+StateVars {
+  GroupMute
+  GroupVolume
+  GroupVolumeChangeable
+  A_ARG_TYPE_InstanceID
+  A_ARG_TYPE_VolumeAdjustment
+}
+
+Actions {
+  GetGroupMute(InstanceID: ui4) -> (CurrentMute: Boolean)
+  SetGroupMute(InstanceID: ui4, DesiredMute: Boolean)
+  GetGroupVolume(InstanceID: ui4) -> (CurrentVolume: 0..=100)
+  SetGroupVolume(InstanceID: ui4, DesiredVolume: 0..=100)
+  SetRelativeGroupVolume(InstanceID: ui4, Adjustment: i4) -> (NewVolume: 0..=100)
+  SnapshotGroupVolume(InstanceID: ui4)
+}

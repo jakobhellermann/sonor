@@ -1,0 +1,38 @@
+StateVars {
+  LastChange
+  UpdateID
+  Curated
+  A_ARG_TYPE_UpdateID
+  A_ARG_TYPE_QueueID
+  A_ARG_TYPE_QueueOwnerID
+  A_ARG_TYPE_QueueOwnerContext
+  A_ARG_TYPE_QueuePolicy
+  A_ARG_TYPE_URI
+  A_ARG_TYPE_LIST_URI
+  A_ARG_TYPE_URIMetaData
+  A_ARG_TYPE_ObjectID
+  A_ARG_TYPE_TrackNumber
+  A_ARG_TYPE_NumTracks
+  A_ARG_TYPE_EnqueueAsNext
+  A_ARG_TYPE_SavedQueueTitle
+  A_ARG_TYPE_Index
+  A_ARG_TYPE_Count
+  A_ARG_TYPE_Result
+  A_ARG_TYPE_SavedQueueTitle
+  A_ARG_TYPE_TrackNumbersCSV
+  A_ARG_TYPE_LIST_URI_AND_METADATA
+}
+
+Actions {
+  AddURI(QueueID: ui4, UpdateID: ui4, EnqueuedURI: String, EnqueuedURIMetaData: String, DesiredFirstTrackNumberEnqueued: ui4, EnqueueAsNext: Boolean) -> (FirstTrackNumberEnqueued: ui4, NumTracksAdded: ui4, NewQueueLength: ui4, NewUpdateID: ui4)
+  AddMultipleURIs(QueueID: ui4, UpdateID: ui4, ContainerURI: String, ContainerMetaData: String, DesiredFirstTrackNumberEnqueued: ui4, EnqueueAsNext: Boolean, NumberOfURIs: ui4, EnqueuedURIsAndMetaData: String) -> (FirstTrackNumberEnqueued: ui4, NumTracksAdded: ui4, NewQueueLength: ui4, NewUpdateID: ui4)
+  AttachQueue(QueueOwnerID: String) -> (QueueID: ui4, QueueOwnerContext: String)
+  Backup()
+  Browse(QueueID: ui4, StartingIndex: ui4, RequestedCount: ui4) -> (Result: String, NumberReturned: ui4, TotalMatches: ui4, UpdateID: ui4)
+  CreateQueue(QueueOwnerID: String, QueueOwnerContext: String, QueuePolicy: String) -> (QueueID: ui4)
+  RemoveAllTracks(QueueID: ui4, UpdateID: ui4) -> (NewUpdateID: ui4)
+  RemoveTrackRange(QueueID: ui4, UpdateID: ui4, StartingIndex: ui4, NumberOfTracks: ui4) -> (NewUpdateID: ui4)
+  ReorderTracks(QueueID: ui4, StartingIndex: ui4, NumberOfTracks: ui4, InsertBefore: ui4, UpdateID: ui4) -> (NewUpdateID: ui4)
+  ReplaceAllTracks(QueueID: ui4, UpdateID: ui4, ContainerURI: String, ContainerMetaData: String, CurrentTrackIndex: ui4, NewCurrentTrackIndices: String, NumberOfURIs: ui4, EnqueuedURIsAndMetaData: String) -> (NewQueueLength: ui4, NewUpdateID: ui4)
+  SaveAsSonosPlaylist(QueueID: ui4, Title: String, ObjectID: String) -> (AssignedObjectID: String)
+}

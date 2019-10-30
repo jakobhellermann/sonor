@@ -1,0 +1,20 @@
+StateVars {
+  A_ARG_TYPE_MemberID
+  A_ARG_TYPE_TransportSettings
+  A_ARG_TYPE_AVTransportURI
+  A_ARG_TYPE_BufferingResultCode
+  A_ARG_TYPE_BootSeq
+  GroupCoordinatorIsLocal
+  LocalGroupUUID
+  VirtualLineInGroupID
+  SourceAreaIds
+  ResetVolumeAfter
+  VolumeAVTransportURI
+}
+
+Actions {
+  AddMember(MemberID: String, BootSeq: ui4) -> (CurrentTransportSettings: String, CurrentURI: String, GroupUUIDJoined: String, ResetVolumeAfter: Boolean, VolumeAVTransportURI: String)
+  RemoveMember(MemberID: String)
+  ReportTrackBufferingResult(MemberID: String, ResultCode: i4)
+  SetSourceAreaIds(DesiredSourceAreaIds: String)
+}

@@ -1,0 +1,10 @@
+StateVars {
+  A_ARG_TYPE_Seed
+  A_ARG_TYPE_Code
+  A_ARG_TYPE_MID
+  A_ARG_TYPE_DID
+}
+
+Actions {
+  QPlayAuth(Seed: String) -> (Code: String, MID: String, DID: String)
+}

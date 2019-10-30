@@ -1,0 +1,18 @@
+StateVars {
+  SourceProtocolInfo
+  SinkProtocolInfo
+  CurrentConnectionIDs
+  A_ARG_TYPE_ConnectionStatus
+  A_ARG_TYPE_ConnectionManager
+  A_ARG_TYPE_Direction
+  A_ARG_TYPE_ProtocolInfo
+  A_ARG_TYPE_ConnectionID
+  A_ARG_TYPE_AVTransportID
+  A_ARG_TYPE_RcsID
+}
+
+Actions {
+  GetProtocolInfo() -> (Source: String, Sink: String)
+  GetCurrentConnectionIDs() -> (ConnectionIDs: String)
+  GetCurrentConnectionInfo(ConnectionID: i4) -> (RcsID: i4, AVTransportID: i4, ProtocolInfo: String, PeerConnectionManager: String, PeerConnectionID: i4, Direction: [Input, Output], Status: [OK, ContentFormatMismatch, InsufficientBandwidth, UnreliableChannel, Unknown])
+}

@@ -1,0 +1,50 @@
+StateVars {
+  A_ARG_TYPE_ObjectID
+  A_ARG_TYPE_Result
+  A_ARG_TYPE_SearchCriteria
+  A_ARG_TYPE_BrowseFlag
+  A_ARG_TYPE_Filter
+  A_ARG_TYPE_SortCriteria
+  A_ARG_TYPE_Prefix
+  A_ARG_TYPE_Index
+  A_ARG_TYPE_Count
+  A_ARG_TYPE_UpdateID
+  A_ARG_TYPE_TagValueList
+  A_ARG_TYPE_AlbumArtistDisplayOption
+  A_ARG_TYPE_SortOrder
+  A_ARG_TYPE_LastIndexChange
+  SearchCapabilities
+  SortCapabilities
+  SystemUpdateID
+  ContainerUpdateIDs
+  ShareIndexInProgress
+  ShareIndexLastError
+  UserRadioUpdateID
+  SavedQueuesUpdateID
+  ShareListUpdateID
+  RecentlyPlayedUpdateID
+  Browseable
+  RadioFavoritesUpdateID
+  RadioLocationUpdateID
+  FavoritesUpdateID
+  FavoritePresetsUpdateID
+}
+
+Actions {
+  GetSearchCapabilities() -> (SearchCaps: String)
+  GetSortCapabilities() -> (SortCaps: String)
+  GetSystemUpdateID() -> (Id: ui4)
+  GetAlbumArtistDisplayOption() -> (AlbumArtistDisplayOption: String)
+  GetLastIndexChange() -> (LastIndexChange: String)
+  Browse(ObjectID: String, BrowseFlag: [BrowseMetadata, BrowseDirectChildren], Filter: String, StartingIndex: ui4, RequestedCount: ui4, SortCriteria: String) -> (Result: String, NumberReturned: ui4, TotalMatches: ui4, UpdateID: ui4)
+  FindPrefix(ObjectID: String, Prefix: String) -> (StartingIndex: ui4, UpdateID: ui4)
+  GetAllPrefixLocations(ObjectID: String) -> (TotalPrefixes: ui4, PrefixAndIndexCSV: String, UpdateID: ui4)
+  CreateObject(ContainerID: String, Elements: String) -> (ObjectID: String, Result: String)
+  UpdateObject(ObjectID: String, CurrentTagValue: String, NewTagValue: String)
+  DestroyObject(ObjectID: String)
+  RefreshShareIndex(AlbumArtistDisplayOption: String)
+  RequestResort(SortOrder: String)
+  GetShareIndexInProgress() -> (IsIndexing: Boolean)
+  GetBrowseable() -> (IsBrowseable: Boolean)
+  SetBrowseable(Browseable: Boolean)
+}
