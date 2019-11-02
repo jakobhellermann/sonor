@@ -26,31 +26,32 @@ impl HashMapExt for std::collections::HashMap<String, String> {
     }
 }
 
-pub fn duration_to_str(duration: &std::time::Duration) -> String {
-    let seconds_total = duration.as_secs();
+pub fn seconds_to_str(seconds_total: u32) -> String {
     let seconds = seconds_total % 60;
     let minutes = (seconds_total / 60) % 60;
     let hours = seconds_total / 3600;
 
     return format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
 }
-pub fn duration_from_str(s: &str) -> Result<std::time::Duration> {
+pub fn seconds_from_str(s: &str) -> Result<u32> {
     let opt = (|| {
         let mut split = s.splitn(3, ':');
-        let hours = split.next()?.parse::<u64>().ok()?;
-        let minutes = split.next()?.parse::<u64>().ok()?;
-        let seconds = split.next()?.parse::<u64>().ok()?;
+        let hours = split.next()?.parse::<u32>().ok()?;
+        let minutes = split.next()?.parse::<u32>().ok()?;
+        let seconds = split.next()?.parse::<u32>().ok()?;
 
-        Some(std::time::Duration::from_secs(
-            hours * 3600 + minutes * 60 + seconds,
-        ))
+        Some(hours * 3600 + minutes * 60 + seconds)
     })();
 
     opt.ok_or(upnp::Error::ParseError("invalid duration"))
 }
 
 pub fn parse_bool(s: String) -> Result<bool> {
-    s.parse().map_err(upnp::Error::invalid_response)
+    match s.trim() {
+        "0" => Ok(false),
+        "1" => Ok(true),
+        _ => Err(upnp::Error::ParseError("bool was neither `0` nor `1`")),
+    }
 }
 
 pub fn parse_node_text(node: Node<'_, '_>) -> Result<String> {

@@ -1,6 +1,5 @@
 use crate::{utils, Result};
 use roxmltree::Node;
-use std::time::Duration;
 
 /// A [Track](struct.Track.html) with some metadata like the track number, its duration and the
 /// elapsed time.
@@ -8,13 +7,13 @@ use std::time::Duration;
 pub struct TrackInfo {
     track: Track,
     track_no: u32,
-    duration: Duration,
-    elapsed: Duration,
+    duration: u32,
+    elapsed: u32,
 }
 
 #[allow(missing_docs)]
 impl TrackInfo {
-    pub(crate) fn new(track: Track, track_no: u32, duration: Duration, played: Duration) -> Self {
+    pub(crate) fn new(track: Track, track_no: u32, duration: u32, played: u32) -> Self {
         Self {
             track,
             track_no,
@@ -29,11 +28,11 @@ impl TrackInfo {
     pub fn track_no(&self) -> u32 {
         self.track_no
     }
-    pub fn duration(&self) -> &Duration {
-        &self.duration
+    pub fn duration(&self) -> u32 {
+        self.duration
     }
-    pub fn elapsed(&self) -> &Duration {
-        &self.elapsed
+    pub fn elapsed(&self) -> u32 {
+        self.elapsed
     }
 }
 
@@ -45,7 +44,7 @@ pub struct Track {
     title: String,
     creator: Option<String>,
     album: Option<String>,
-    duration: Option<Duration>,
+    duration: Option<u32>,
     uri: String,
 }
 
@@ -60,8 +59,8 @@ impl Track {
     pub fn album(&self) -> Option<&str> {
         self.album.as_deref()
     }
-    pub fn duration(&self) -> Option<&Duration> {
-        self.duration.as_ref()
+    pub fn duration(&self) -> Option<u32> {
+        self.duration
     }
     pub fn uri(&self) -> &str {
         &self.uri
@@ -108,7 +107,7 @@ impl Track {
             .attributes()
             .iter()
             .find(|a| a.name().eq_ignore_ascii_case("duration"))
-            .map(|a| utils::duration_from_str(a.value()))
+            .map(|a| utils::seconds_from_str(a.value()))
             .transpose()?;
 
         let uri = utils::parse_node_text(res)?;

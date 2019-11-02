@@ -10,7 +10,6 @@ use roxmltree::{Document, Node};
 
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
-use std::time::Duration;
 
 pub(crate) const SONOS_URN: URN = URN::device("schemas-upnp-org", "ZonePlayer", 1);
 
@@ -96,14 +95,13 @@ impl Speaker {
             .map(drop)
     }
 
-    pub async fn skip_to(&self, time: &Duration) -> Result<()> {
+    pub async fn skip_to(&self, seconds: u32) -> Result<()> {
         let args =
-            args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::duration_to_str(time)};
+            args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::seconds_to_str(seconds)};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
-    pub async fn skip_by(&self, time: &Duration) -> Result<()> {
-        let args =
-            args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::duration_to_str(time)};
+    pub async fn skip_by(&self, seconds: u32) -> Result<()> {
+        let args = args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::seconds_to_str(seconds)};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
     pub async fn play_queue_item(&self, track_no: u32) -> Result<()> {
@@ -202,8 +200,8 @@ impl Speaker {
 
         let metadata = map.extract("TrackMetaData")?;
 
-        let duration = utils::duration_from_str(&duration)?;
-        let elapsed = utils::duration_from_str(&elapsed)?;
+        let duration = utils::seconds_from_str(&duration)?;
+        let elapsed = utils::seconds_from_str(&elapsed)?;
 
         let doc = Document::parse(&metadata)?;
         let item = utils::find_root_node(&doc, "item", "Track Metadata")?;
@@ -227,7 +225,7 @@ impl Speaker {
             .await
             .map(drop)
     }
-    pub async fn set_volume_relative(&self, adjustment: i32) -> Result<u16> {
+    pub async fn set_volume_relative(&self, adjustment: i16) -> Result<u16> {
         let args = args! { "InstanceID": 0, "Channel": "Master", "Adjustment": adjustment };
         self.action(RENDERING_CONTROL, "SetRelativeVolume", args)
             .await?
@@ -249,25 +247,25 @@ impl Speaker {
             .map(drop)
     }
 
-    pub async fn bass(&self) -> Result<i16> {
+    pub async fn bass(&self) -> Result<i8> {
         self.action(RENDERING_CONTROL, "GetBass", DEFAULT_ARGS)
             .await?
             .extract("CurrentBass")
             .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
-    pub async fn set_bass(&self, bass: i16) -> Result<()> {
+    pub async fn set_bass(&self, bass: i8) -> Result<()> {
         let args = args! { "InstanceID": 0, "DesiredBass": bass };
         self.action(RENDERING_CONTROL, "SetBass", args)
             .await
             .map(drop)
     }
-    pub async fn treble(&self) -> Result<i16> {
+    pub async fn treble(&self) -> Result<i8> {
         self.action(RENDERING_CONTROL, "GetTreble", DEFAULT_ARGS)
             .await?
             .extract("CurrentTreble")
             .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
     }
-    pub async fn set_treble(&self, treble: i16) -> Result<()> {
+    pub async fn set_treble(&self, treble: i8) -> Result<()> {
         self.action(
             RENDERING_CONTROL,
             "SetTreble",

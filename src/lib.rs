@@ -67,6 +67,7 @@ pub use discovery::{discover, find};
 pub use speaker::Speaker;
 pub use track::{Track, TrackInfo};
 
+pub use upnp;
 pub use upnp::ssdp::URN;
 pub use upnp::Error;
 
