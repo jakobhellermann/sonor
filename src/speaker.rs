@@ -408,6 +408,14 @@ impl Speaker {
         .map(drop)
     }
 
+    /// Set the transport URI for the speaker.
+    pub async fn set_transport_uri(&self, uri: &str) -> Result<()> {
+        let args = args! { "InstanceID": 0, "CurrentURI": uri, "CurrentURIMetaData": "" };
+        self.action(AV_TRANSPORT, "SetAVTransportURI", args)
+            .await
+            .map(drop)
+    }
+
     /// Execute some UPnP Action on the device.
     /// Panics if the service is not actually available.
     pub async fn action(
@@ -421,48 +429,5 @@ impl Speaker {
             .unwrap_or_else(|| panic!(format!("expected service '{}'", service)))
             .action(self.0.url(), action, payload)
             .await
-    }
-}
-
-#[cfg(FALSE)]
-mod tests {
-    extern crate test;
-
-    use crate::discovery;
-    use async_std::task::block_on;
-    use futures::prelude::*;
-    use std::time::Duration;
-    use test::Bencher;
-
-    const TIMEOUT: Duration = Duration::from_secs(1);
-
-    #[bench]
-    fn discover_stream_collect(b: &mut Bencher) {
-        b.iter(|| {
-            block_on(async {
-                let vec: Vec<_> = discovery::discover_simple(TIMEOUT)
-                    .await
-                    .unwrap()
-                    .try_collect()
-                    .await
-                    .unwrap();
-                assert_eq!(vec.len(), 2);
-            })
-        })
-    }
-
-    #[bench]
-    fn discover_efficient(b: &mut Bencher) {
-        b.iter(|| {
-            block_on(async {
-                let vec: Vec<_> = discovery::discover(TIMEOUT)
-                    .await
-                    .unwrap()
-                    .try_collect()
-                    .await
-                    .unwrap();
-                assert_eq!(vec.len(), 2);
-            })
-        })
     }
 }

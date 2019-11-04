@@ -8,8 +8,7 @@ use futures::stream::FuturesUnordered;
 use std::time::Duration;
 
 // 1,408ms +/- 169ms for two devices in network
-#[cfg(FALSE)]
-pub(crate) async fn discover_simple(
+/*pub(crate) async fn discover_simple(
     timeout: Duration,
 ) -> Result<impl Stream<Item = Result<Speaker>>> {
     let stream = upnp::discover(&SONOS_URN.into(), timeout)
@@ -18,7 +17,7 @@ pub(crate) async fn discover_simple(
         .map_ok(|device| device.expect("searched for sonos urn but got something else"));
 
     Ok(stream)
-}
+}*/
 
 // 292ms +/- 191ms for two devices in network
 /// Discover sonos players on the network.
