@@ -2,8 +2,8 @@ use crate::speaker::{Speaker, SONOS_URN};
 use crate::Result;
 use upnp::Device;
 
-use futures::prelude::*;
-use futures::stream::FuturesUnordered;
+use futures_util::pin_mut;
+use futures_util::stream::{FuturesUnordered, Stream, StreamExt};
 
 use std::time::Duration;
 
@@ -43,7 +43,7 @@ use std::time::Duration;
 /// # });
 pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Speaker>>> {
     let devices = upnp::discover(&SONOS_URN.into(), timeout).await?;
-    futures::pin_mut!(devices);
+    pin_mut!(devices);
 
     let mut empty = None;
     let mut devices_iter = None;
@@ -93,7 +93,7 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
 /// # });
 pub async fn find(roomname: &str, timeout: Duration) -> Result<Option<Speaker>> {
     let devices = discover(timeout).await?;
-    futures::pin_mut!(devices);
+    pin_mut!(devices);
 
     while let Some(device) = devices.next().await {
         let device = device?;
