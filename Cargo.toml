@@ -6,9 +6,9 @@ edition = "2018"
 
 [dependencies]
 upnp = { path = "../upnp" }
-futures-util = "0.3"
+futures-util = { version = "0.3", default-features = false }
 roxmltree = "0.7"
 
 [dev-dependencies]
-async-std = "0.99"
+async-std = "1"
 futures = "0.3"
