@@ -417,10 +417,10 @@ impl Speaker {
     }
 
     /// Get the current transport URI for the speaker.
-    pub async fn transport_uri(&self) -> Result<String> {
+    pub async fn transport_uri(&self) -> Result<Option<String>> {
         self.action(AV_TRANSPORT, "GetMediaInfo", DEFAULT_ARGS)
-            .await?
-            .extract("CurrentURI")
+            .await
+            .map(|mut res| res.remove("CurrentURI"))
     }
 
     /// Execute some UPnP Action on the device.
