@@ -10,5 +10,5 @@ futures-util = { version = "0.3", default-features = false }
 roxmltree = "0.7"
 
 [dev-dependencies]
-async-std = "1"
+async-std = { version = "1", features = ["attributes"] }
 futures = "0.3"
