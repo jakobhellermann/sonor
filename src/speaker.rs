@@ -1,15 +1,12 @@
-use crate::track::{Track, TrackInfo};
-use crate::utils::{self, HashMapExt};
-use crate::{args, Result};
-use crate::{RepeatMode, SpeakerInfo};
-
-use upnp::ssdp::URN;
-use upnp::Device;
-
+use crate::{
+    args,
+    track::{Track, TrackInfo},
+    utils::{self, HashMapExt},
+    RepeatMode, Result, SpeakerInfo,
+};
 use roxmltree::{Document, Node};
-
-use std::collections::HashMap;
-use std::net::Ipv4Addr;
+use std::{collections::HashMap, net::Ipv4Addr};
+use upnp::{ssdp::URN, Device};
 
 pub(crate) const SONOS_URN: URN = URN::device("schemas-upnp-org", "ZonePlayer", 1);
 

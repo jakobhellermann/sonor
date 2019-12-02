@@ -66,8 +66,6 @@ pub use discovery::{discover, find};
 pub use speaker::Speaker;
 pub use track::{Track, TrackInfo};
 
-pub use upnp;
-pub use upnp::ssdp::URN;
-pub use upnp::Error;
+pub use upnp::{self, ssdp::URN, Error};
 
-type Result<T> = std::result::Result<T, Error>;
+type Result<T, E = Error> = std::result::Result<T, E>;

@@ -1,8 +1,10 @@
 use crate::Result;
 use roxmltree::Node;
-use std::cmp::PartialEq;
-use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::{
+    cmp::PartialEq,
+    fmt,
+    hash::{Hash, Hasher},
+};
 
 /// This enum describes how Sonos repeats the current playlist.
 #[derive(Debug)]

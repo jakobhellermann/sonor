@@ -1,11 +1,13 @@
-use crate::speaker::{Speaker, SONOS_URN};
-use crate::Result;
-use upnp::Device;
-
-use futures_util::pin_mut;
-use futures_util::stream::{FuturesUnordered, Stream, StreamExt};
-
+use crate::{
+    speaker::{Speaker, SONOS_URN},
+    Result,
+};
+use futures_util::{
+    pin_mut,
+    stream::{FuturesUnordered, Stream, StreamExt},
+};
 use std::time::Duration;
+use upnp::Device;
 
 // 1,408ms +/- 169ms for two devices in network
 /*pub(crate) async fn discover_simple(
