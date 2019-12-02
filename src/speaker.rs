@@ -188,14 +188,18 @@ impl Speaker {
         let duration = map.extract("TrackDuration")?;
         let elapsed = map.extract("RelTime")?;
 
-        if track_no == 0
-            || duration.eq_ignore_ascii_case("not_implemented")
+        // e.g. speaker was playing spotify, then spotify disconnected but sonos is still on
+        // "x-sonos-vli"
+        if duration.eq_ignore_ascii_case("not_implemented")
             || elapsed.eq_ignore_ascii_case("not_implemented")
         {
             return Ok(None);
         }
 
-        let metadata = map.extract("TrackMetaData")?;
+        let metadata = match map.remove("TrackMetaData") {
+            Some(metadata) => metadata,
+            None => return Ok(None),
+        };
 
         let duration = utils::seconds_from_str(&duration)?;
         let elapsed = utils::seconds_from_str(&elapsed)?;
