@@ -15,6 +15,7 @@ const DEVICE_PROPERTIES: &URN = &URN::service("schemas-upnp-org", "DevicePropert
 const RENDERING_CONTROL: &URN = &URN::service("schemas-upnp-org", "RenderingControl", 1);
 const ZONE_GROUP_TOPOLOGY: &URN = &URN::service("schemas-upnp-org", "ZoneGroupTopology", 1);
 const QUEUE: &URN = &URN::service("schemas-sonos-com", "Queue", 1);
+const MUSIC_SERVICES: &URN = &URN::service("schemas-upnp-org", "MusicServices", 1);
 
 const DEFAULT_ARGS: &str = "<InstanceID>0</InstanceID>";
 
@@ -422,6 +423,41 @@ impl Speaker {
         self.action(AV_TRANSPORT, "GetMediaInfo", DEFAULT_ARGS)
             .await
             .map(|mut res| res.remove("CurrentURI"))
+    }
+
+    #[allow(unused)]
+    /// returns a map of lowercase service name to a tuple of (sid, capabilities, stype)
+    async fn music_services(&self) -> Result<(Vec<u32>, HashMap<String, (u32, u32, u32)>)> {
+        let mut map = self
+            .action(MUSIC_SERVICES, "ListAvailableServices", "")
+            .await?;
+        let descriptor_list = map.extract("AvailableServiceDescriptorList")?;
+        let service_type_list = map.extract("AvailableServiceTypeList")?;
+
+        let available_services: Vec<u32> = service_type_list
+            .split(',')
+            .map(|x| x.parse())
+            .collect::<Result<_, _>>()
+            .map_err(upnp::Error::invalid_response)?;
+
+        let document = Document::parse(&descriptor_list)?;
+        let services = utils::find_root_node(&document, "Services", "DescriptorList")?
+            .children()
+            .map(|node| -> Result<_> {
+                let id = utils::find_node_attribute(node, "Services", "Id")?;
+                let name = utils::find_node_attribute(node, "Services", "Name")?;
+                let capabilities = utils::find_node_attribute(node, "Services", "Capabilities")?;
+
+                let id = id.parse().map_err(upnp::Error::invalid_response)?;
+                let capabilities = capabilities
+                    .parse()
+                    .map_err(upnp::Error::invalid_response)?;
+                let s_type = id << 8 + 7;
+                Ok((name.to_lowercase(), (id, capabilities, s_type)))
+            })
+            .collect::<Result<_, _>>()?;
+
+        Ok((available_services, services))
     }
 
     /// Execute some UPnP Action on the device.
