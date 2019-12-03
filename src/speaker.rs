@@ -353,7 +353,7 @@ impl Speaker {
             .filter(Node::is_element)
             .filter(|c| c.tag_name().name().eq_ignore_ascii_case("ZoneGroup"))
             .map(|group| {
-                let coordinator = utils::find_node_attribute(group, "ZoneGroup", "Coordinator")?;
+                let coordinator = utils::find_node_attribute(group, "Coordinator")?.to_string();
                 let members = group
                     .children()
                     .filter(Node::is_element)
@@ -444,9 +444,9 @@ impl Speaker {
         let services = utils::find_root_node(&document, "Services", "DescriptorList")?
             .children()
             .map(|node| -> Result<_> {
-                let id = utils::find_node_attribute(node, "Services", "Id")?;
-                let name = utils::find_node_attribute(node, "Services", "Name")?;
-                let capabilities = utils::find_node_attribute(node, "Services", "Capabilities")?;
+                let id = utils::find_node_attribute(node, "Id")?;
+                let name = utils::find_node_attribute(node, "Name")?;
+                let capabilities = utils::find_node_attribute(node, "Capabilities")?;
 
                 let id = id.parse().map_err(upnp::Error::invalid_response)?;
                 let capabilities = capabilities

@@ -60,13 +60,14 @@ pub fn parse_node_text(node: Node<'_, '_>) -> Result<String> {
         .map(|x| x.to_string())
 }
 
-pub fn find_node_attribute(node: Node<'_, '_>, parent: &str, attr: &str) -> Result<String> {
+pub fn find_node_attribute<'n, 'd: 'n>(node: Node<'d, 'n>, attr: &str) -> Result<&'n str> {
     node.attributes()
         .iter()
         .find(|a| a.name().eq_ignore_ascii_case(attr))
         .map(Attribute::value)
-        .ok_or_else(|| upnp::Error::XMLMissingElement(parent.to_string(), attr.to_string()))
-        .map(|x| x.to_string())
+        .ok_or_else(|| {
+            upnp::Error::XMLMissingElement(node.tag_name().name().to_string(), attr.to_string())
+        })
 }
 
 pub fn find_root_node<'a, 'input: 'a>(
