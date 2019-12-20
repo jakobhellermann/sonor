@@ -21,7 +21,7 @@ pub trait HashMapExt {
 impl HashMapExt for std::collections::HashMap<String, String> {
     fn extract(&mut self, key: &str) -> Result<String> {
         self.remove(key).ok_or_else(|| {
-            upnp::Error::XMLMissingElement("UPnP Response".to_string(), key.to_string())
+            upnp::Error::XmlMissingElement("UPnP Response".to_string(), key.to_string())
         })
     }
 }
@@ -54,19 +54,13 @@ pub fn parse_bool(s: String) -> Result<bool> {
     }
 }
 
-pub fn parse_node_text(node: Node<'_, '_>) -> Result<String> {
-    node.text()
-        .ok_or_else(|| upnp::Error::XMLMissingText(node.tag_name().name().to_string()))
-        .map(|x| x.to_string())
-}
-
 pub fn find_node_attribute<'n, 'd: 'n>(node: Node<'d, 'n>, attr: &str) -> Result<&'n str> {
     node.attributes()
         .iter()
         .find(|a| a.name().eq_ignore_ascii_case(attr))
         .map(Attribute::value)
         .ok_or_else(|| {
-            upnp::Error::XMLMissingElement(node.tag_name().name().to_string(), attr.to_string())
+            upnp::Error::XmlMissingElement(node.tag_name().name().to_string(), attr.to_string())
         })
 }
 
@@ -79,5 +73,5 @@ pub fn find_root_node<'a, 'input: 'a>(
         .descendants()
         .filter(roxmltree::Node::is_element)
         .find(|n| n.tag_name().name().eq_ignore_ascii_case(element))
-        .ok_or_else(|| upnp::Error::XMLMissingElement(docname.to_string(), element.to_string()))
+        .ok_or_else(|| upnp::Error::XmlMissingElement(docname.to_string(), element.to_string()))
 }

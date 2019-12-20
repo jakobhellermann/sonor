@@ -88,7 +88,7 @@ impl SpeakerInfo {
         Ok(Self {
             name: name
                 .ok_or_else(|| {
-                    upnp::Error::XMLMissingElement(
+                    upnp::Error::XmlMissingElement(
                         "RoomName".to_string(),
                         "ZoneGroupMember".to_string(),
                     )
@@ -96,7 +96,7 @@ impl SpeakerInfo {
                 .to_string(),
             uuid: uuid
                 .ok_or_else(|| {
-                    upnp::Error::XMLMissingElement(
+                    upnp::Error::XmlMissingElement(
                         "UUID".to_string(),
                         "ZoneGroupMember".to_string(),
                     )
@@ -104,7 +104,7 @@ impl SpeakerInfo {
                 .to_string(),
             location: location
                 .ok_or_else(|| {
-                    upnp::Error::XMLMissingElement(
+                    upnp::Error::XmlMissingElement(
                         "Location".to_string(),
                         "ZoneGroupMember".to_string(),
                     )

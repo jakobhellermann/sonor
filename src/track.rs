@@ -89,19 +89,19 @@ impl Track {
 
         for child in node.children() {
             match child.tag_name().name() {
-                "title" => title = Some(utils::parse_node_text(child)?),
-                "creator" => creator = Some(utils::parse_node_text(child)?),
-                "album" => album = Some(utils::parse_node_text(child)?),
+                "title" => title = Some(child.text().unwrap_or_default().to_string()),
+                "creator" => creator = Some(child.text().unwrap_or_default().to_string()),
+                "album" => album = Some(child.text().unwrap_or_default().to_string()),
                 "res" => res = Some(child),
                 _ => (),
             }
         }
 
         let title = title.ok_or_else(|| {
-            upnp::Error::XMLMissingElement(node.tag_name().name().to_string(), "title".to_string())
+            upnp::Error::XmlMissingElement(node.tag_name().name().to_string(), "title".to_string())
         })?;
         let res = res.ok_or_else(|| {
-            upnp::Error::XMLMissingElement(node.tag_name().name().to_string(), "res".to_string())
+            upnp::Error::XmlMissingElement(node.tag_name().name().to_string(), "res".to_string())
         })?;
         let duration = res
             .attributes()
@@ -110,7 +110,7 @@ impl Track {
             .map(|a| utils::seconds_from_str(a.value()))
             .transpose()?;
 
-        let uri = utils::parse_node_text(res)?;
+        let uri = res.text().unwrap_or_default().to_string();
 
         Ok(Self {
             title,
