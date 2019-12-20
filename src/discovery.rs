@@ -4,7 +4,7 @@ use crate::{
 };
 use futures_util::{
     pin_mut,
-    stream::{FuturesUnordered, Stream, StreamExt},
+    stream::{FuturesUnordered, Stream, TryStreamExt},
 };
 use std::time::Duration;
 use upnp::Device;
@@ -35,8 +35,7 @@ use upnp::Device;
 /// let devices = sonos::discover(Duration::from_secs(2)).await?;
 ///
 /// futures::pin_mut!(devices);
-/// while let Some(device) = devices.next().await {
-///     let device = device?;
+/// while let Some(device) = devices.try_next().await? {
 ///     let name = device.name().await?;
 ///     println!("- {}", name);
 /// }
@@ -44,39 +43,35 @@ use upnp::Device;
 /// # Ok::<_, sonos::Error>(())
 /// # });
 pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Speaker>>> {
+    // this method searches for devices, but when it finds the first one it
+    // uses its `.zone_group_state` to find the other devices in the network.
+
     let devices = upnp::discover(&SONOS_URN.into(), timeout).await?;
     pin_mut!(devices);
 
-    let mut empty = None;
     let mut devices_iter = None;
 
-    match devices.next().await {
-        None => empty = Some(std::iter::empty()),
-        Some(device) => {
-            devices_iter = Some(
-                Speaker::from_device(device?)
-                    .expect("searched for sonos urn but got something else")
-                    ._zone_group_state()
-                    .await?
-                    .into_iter()
-                    .flat_map(|(_, speakers)| speakers)
-                    .map(|speaker_info| {
-                        let location = speaker_info.location().parse();
-                        async {
-                            let device = Device::from_url(location?).await?;
-                            Ok(Speaker::from_device(device).expect(
-                                "sonos action 'GetZoneGroupState' return non-sonos devices",
-                            ))
-                        }
-                    }),
-            )
-        }
+    if let Some(device) = devices.try_next().await? {
+        let iter = Speaker::from_device(device)
+            .expect("searched for sonos urn but got something else")
+            ._zone_group_state()
+            .await?
+            .into_iter()
+            .flat_map(|(_, speakers)| speakers)
+            .map(|speaker_info| {
+                let url = speaker_info.location().parse();
+                async {
+                    let device = Device::from_url(url?).await?;
+                    let speaker = Speaker::from_device(device);
+                    Ok(speaker.expect("sonos action 'GetZoneGroupState' return non-sonos devices"))
+                }
+            });
+        devices_iter = Some(iter);
     };
 
-    Ok(empty
+    Ok(devices_iter
         .into_iter()
         .flatten()
-        .chain(devices_iter.into_iter().flatten())
         .collect::<FuturesUnordered<_>>())
 }
 
@@ -97,8 +92,7 @@ pub async fn find(roomname: &str, timeout: Duration) -> Result<Option<Speaker>> 
     let devices = discover(timeout).await?;
     pin_mut!(devices);
 
-    while let Some(device) = devices.next().await {
-        let device = device?;
+    while let Some(device) = devices.try_next().await? {
         if device.name().await?.eq_ignore_ascii_case(roomname) {
             return Ok(Some(device));
         }
