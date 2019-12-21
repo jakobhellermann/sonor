@@ -6,6 +6,7 @@ use roxmltree::Node;
 #[derive(Debug)]
 pub struct TrackInfo {
     track: Track,
+    metadata: String,
     track_no: u32,
     duration: u32,
     elapsed: u32,
@@ -13,9 +14,16 @@ pub struct TrackInfo {
 
 #[allow(missing_docs)]
 impl TrackInfo {
-    pub(crate) fn new(track: Track, track_no: u32, duration: u32, played: u32) -> Self {
+    pub(crate) fn new(
+        track: Track,
+        metadata: String,
+        track_no: u32,
+        duration: u32,
+        played: u32,
+    ) -> Self {
         Self {
             track,
+            metadata,
             track_no,
             duration,
             elapsed: played,
@@ -24,6 +32,9 @@ impl TrackInfo {
 
     pub fn track(&self) -> &Track {
         &self.track
+    }
+    pub fn metadata(&self) -> &str {
+        &self.metadata
     }
     pub fn track_no(&self) -> u32 {
         self.track_no

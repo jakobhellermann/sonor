@@ -112,7 +112,7 @@ impl Speaker {
         let args = args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::seconds_to_str(seconds)};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
-    pub async fn play_queue_item(&self, track_no: u32) -> Result<()> {
+    pub async fn seek_track(&self, track_no: u32) -> Result<()> {
         let args = args! { "InstanceID": 0, "Unit": "TRACK_NR", "Target": track_no + 1};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
@@ -219,7 +219,9 @@ impl Speaker {
         let item = utils::find_root_node(&doc, "item", "Track Metadata")?;
         let track = Track::from_xml(item)?;
 
-        Ok(Some(TrackInfo::new(track, track_no, duration, elapsed)))
+        Ok(Some(TrackInfo::new(
+            track, metadata, track_no, duration, elapsed,
+        )))
     }
 
     // RENDERING_CONTROL
@@ -328,16 +330,16 @@ impl Speaker {
     }
 
     /// Enqueues a track at the end of the queue.
-    pub async fn queue_end(&self, uri: &str) -> Result<()> {
-        let args = args! { "InstanceID": 0, "EnqueuedURI": uri, "EnqueuedURIMetaDate": "", "DesiredFirstTrackNumberEnqueued": 0, "EnqueueAsNext": 0 };
+    pub async fn queue_end(&self, uri: &str, metadata: &str) -> Result<()> {
+        let args = args! { "InstanceID": 0, "EnqueuedURI": uri, "EnqueuedURIMetaData": metadata, "DesiredFirstTrackNumberEnqueued": 0, "EnqueueAsNext": 0 };
         self.action(AV_TRANSPORT, "AddURIToQueue", args)
             .await
             .map(drop)
     }
 
     /// Enqueues a track as the next one.
-    pub async fn queue_next(&self, uri: &str) -> Result<()> {
-        let args = args! { "InstanceID": 0, "EnqueuedURI": uri, "EnqueuedURIMetaDate": "", "DesiredFirstTrackNumberEnqueued": 0, "EnqueueAsNext": 1 };
+    pub async fn queue_next(&self, uri: &str, metadata: &str) -> Result<()> {
+        let args = args! { "InstanceID": 0, "EnqueuedURI": uri, "EnqueuedURIMetaData": metadata, "DesiredFirstTrackNumberEnqueued": 0, "EnqueueAsNext": 1 };
         self.action(AV_TRANSPORT, "AddURIToQueue", args)
             .await
             .map(drop)
@@ -421,8 +423,8 @@ impl Speaker {
     }
 
     /// Set the transport URI for the speaker.
-    pub async fn set_transport_uri(&self, uri: &str) -> Result<()> {
-        let args = args! { "InstanceID": 0, "CurrentURI": uri, "CurrentURIMetaData": "" };
+    pub async fn set_transport_uri(&self, uri: &str, metadata: &str) -> Result<()> {
+        let args = args! { "InstanceID": 0, "CurrentURI": uri, "CurrentURIMetaData": metadata };
         self.action(AV_TRANSPORT, "SetAVTransportURI", args)
             .await
             .map(drop)
