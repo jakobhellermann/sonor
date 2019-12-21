@@ -78,9 +78,19 @@ impl Speaker {
             .map(drop)
     }
     pub async fn pause(&self) -> Result<()> {
-        self.action(AV_TRANSPORT, "Pause", DEFAULT_ARGS)
-            .await
-            .map(drop)
+        let res = self.action(AV_TRANSPORT, "Pause", DEFAULT_ARGS).await;
+        match res {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                if let upnp::Error::UPnPError(err) = &err {
+                    // "transition not available", i.e. already paused
+                    if err.err_code() == 701 {
+                        return Ok(());
+                    }
+                }
+                Err(err)
+            }
+        }
     }
     pub async fn next(&self) -> Result<()> {
         self.action(AV_TRANSPORT, "Next", DEFAULT_ARGS)
