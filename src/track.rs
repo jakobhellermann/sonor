@@ -19,14 +19,14 @@ impl TrackInfo {
         metadata: String,
         track_no: u32,
         duration: u32,
-        played: u32,
+        elapsed: u32,
     ) -> Self {
         Self {
             track,
             metadata,
             track_no,
             duration,
-            elapsed: played,
+            elapsed,
         }
     }
 

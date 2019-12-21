@@ -57,12 +57,14 @@
 
 mod datatypes;
 mod discovery;
+mod snapshot;
 mod speaker;
 mod track;
 mod utils;
 
 pub use datatypes::{RepeatMode, SpeakerInfo};
 pub use discovery::{discover, find};
+pub use snapshot::Snapshot;
 pub use speaker::Speaker;
 pub use track::{Track, TrackInfo};
 

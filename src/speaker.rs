@@ -2,7 +2,7 @@ use crate::{
     args,
     track::{Track, TrackInfo},
     utils::{self, HashMapExt},
-    RepeatMode, Result, SpeakerInfo,
+    RepeatMode, Result, Snapshot, SpeakerInfo,
 };
 use roxmltree::{Document, Node};
 use std::{collections::HashMap, net::Ipv4Addr};
@@ -432,10 +432,10 @@ impl Speaker {
     }
 
     /// Get the current transport URI for the speaker.
-    pub async fn transport_uri(&self) -> Result<Option<String>> {
+    pub async fn transport_uri(&self) -> Result<String> {
         self.action(AV_TRANSPORT, "GetMediaInfo", DEFAULT_ARGS)
-            .await
-            .map(|mut res| res.remove("CurrentURI"))
+            .await?
+            .extract("CurrentURI")
     }
 
     #[allow(unused)]
@@ -471,6 +471,14 @@ impl Speaker {
             .collect::<Result<_, _>>()?;
 
         Ok((available_services, services))
+    }
+
+    pub async fn snapshot(&self) -> Result<Snapshot> {
+        Snapshot::new(&self).await
+    }
+
+    pub async fn apply(&self, snapshot: Snapshot) -> Result<()> {
+        snapshot.apply(&self).await
     }
 
     /// Execute some UPnP Action on the device.
