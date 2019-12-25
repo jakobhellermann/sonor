@@ -112,8 +112,9 @@ impl Speaker {
         let args = args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::seconds_to_str(seconds)};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
+    /// The first track number is 1.
     pub async fn seek_track(&self, track_no: u32) -> Result<()> {
-        let args = args! { "InstanceID": 0, "Unit": "TRACK_NR", "Target": track_no + 1};
+        let args = args! { "InstanceID": 0, "Unit": "TRACK_NR", "Target": track_no };
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
 
