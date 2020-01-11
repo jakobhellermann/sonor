@@ -1,5 +1,5 @@
 use crate::{track::TrackInfo, Result, Speaker};
-use futures_util::{future::try_join, try_join};
+use futures_util::future::{try_join, try_join4};
 
 /// A Snapshot of the state the speaker is in right now.
 /// Useful for announcing some clip at a lower volume, then later resume where you left of.
@@ -14,12 +14,12 @@ pub struct Snapshot {
 
 impl Snapshot {
     pub(crate) async fn new(speaker: &Speaker) -> Result<Self> {
-        let (volume, track_info, is_playing, transport_uri) = try_join!(
+        let (volume, track_info, is_playing, transport_uri) = try_join4(
             speaker.volume(),
             speaker.track(),
             speaker.is_playing(),
             speaker.transport_uri()
-        )?;
+        ).await?;
 
         Ok(Self {
             volume,
