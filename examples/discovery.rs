@@ -6,8 +6,7 @@ async fn main() -> Result<(), sonos::Error> {
     let devices = sonos::discover(Duration::from_secs(2)).await?;
     futures::pin_mut!(devices);
 
-    while let Some(device) = devices.next().await {
-        let device = device?;
+    while let Some(device) = devices.try_next().await? {
         let name = device.name().await?;
         println!("- {}", name);
     }

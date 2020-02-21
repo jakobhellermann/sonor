@@ -65,10 +65,10 @@ impl Track {
         &self.title
     }
     pub fn creator(&self) -> Option<&str> {
-        self.creator.as_ref().map(String::as_str)
+        self.creator.as_deref()
     }
     pub fn album(&self) -> Option<&str> {
-        self.album.as_ref().map(String::as_str)
+        self.album.as_deref()
     }
     pub fn duration(&self) -> Option<u32> {
         self.duration

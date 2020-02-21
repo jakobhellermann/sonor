@@ -465,7 +465,7 @@ impl Speaker {
                 let capabilities = capabilities
                     .parse()
                     .map_err(upnp::Error::invalid_response)?;
-                let s_type = id << 8 + 7;
+                let s_type = id << (8 + 7);
                 Ok((name.to_lowercase(), (id, capabilities, s_type)))
             })
             .collect::<Result<_, _>>()?;

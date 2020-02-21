@@ -18,8 +18,9 @@ impl Snapshot {
             speaker.volume(),
             speaker.track(),
             speaker.is_playing(),
-            speaker.transport_uri()
-        ).await?;
+            speaker.transport_uri(),
+        )
+        .await?;
 
         Ok(Self {
             volume,
@@ -42,9 +43,10 @@ impl Snapshot {
             speaker.skip_to(track_info.elapsed()).await?;
         }
 
-        match self.is_playing {
-            true => speaker.play().await?,
-            false => speaker.pause().await?,
+        if self.is_playing {
+            speaker.play().await?;
+        } else {
+            speaker.pause().await?;
         }
 
         Ok(())
