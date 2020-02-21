@@ -19,7 +19,7 @@ const MUSIC_SERVICES: &URN = &URN::service("schemas-upnp-org", "MusicServices", 
 
 const DEFAULT_ARGS: &str = "<InstanceID>0</InstanceID>";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// A sonos speaker, wrapping a UPnP-Device and providing user-oriented methods in an asynyronous
 /// API.
 pub struct Speaker(Device);
