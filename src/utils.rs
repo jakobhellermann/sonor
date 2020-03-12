@@ -26,12 +26,15 @@ impl HashMapExt for std::collections::HashMap<String, String> {
     }
 }
 
-pub fn seconds_to_str(seconds_total: u32) -> String {
+pub fn seconds_to_str(seconds_total: i64) -> String {
+    let sign = if seconds_total < 0 { "-" } else { "" };
+    let seconds_total = seconds_total.abs();
+
     let seconds = seconds_total % 60;
     let minutes = (seconds_total / 60) % 60;
     let hours = seconds_total / 3600;
 
-    return format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
+    return format!("{}{:02}:{:02}:{:02}", sign, hours, minutes, seconds);
 }
 pub fn seconds_from_str(s: &str) -> Result<u32> {
     let opt = (|| {

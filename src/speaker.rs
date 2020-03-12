@@ -104,12 +104,11 @@ impl Speaker {
     }
 
     pub async fn skip_to(&self, seconds: u32) -> Result<()> {
-        let args =
-            args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::seconds_to_str(seconds)};
+        let args = args! { "InstanceID": 0, "Unit": "REL_TIME", "Target": utils::seconds_to_str(seconds.into())};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
-    pub async fn skip_by(&self, seconds: u32) -> Result<()> {
-        let args = args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::seconds_to_str(seconds)};
+    pub async fn skip_by(&self, seconds: i32) -> Result<()> {
+        let args = args! { "InstanceID": 0, "Unit": "TIME_DELTA", "Target": utils::seconds_to_str(seconds.into())};
         self.action(AV_TRANSPORT, "Seek", args).await.map(drop)
     }
     /// The first track number is 1.
