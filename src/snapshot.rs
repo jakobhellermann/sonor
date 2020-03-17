@@ -6,8 +6,8 @@ use futures_util::future::{try_join, try_join4};
 #[derive(Debug)]
 pub struct Snapshot {
     volume: u16,
-    track_info: Option<TrackInfo>,
     is_playing: bool,
+    track_info: Option<TrackInfo>,
 
     transport_uri: String,
 }
@@ -31,22 +31,25 @@ impl Snapshot {
     }
 
     pub(crate) async fn apply(&self, speaker: &Speaker) -> Result<()> {
-        let (_, new_transport_uri) =
-            try_join(speaker.set_volume(self.volume), speaker.transport_uri()).await?;
+        speaker.set_volume(self.volume).await?;
 
-        if self.transport_uri == new_transport_uri {
+        if self.transport_uri.starts_with("x-sonos-vli") {
+            log::warn!("unsupported transport uri: 'x-sonos-vli:...'")
+        } else {
             speaker.set_transport_uri(&self.transport_uri, "").await?;
         }
 
         if let Some(track_info) = &self.track_info {
-            speaker.seek_track(track_info.track_no()).await?;
-            speaker.skip_to(track_info.elapsed()).await?;
+            try_join(
+                speaker.seek_track(track_info.track_no()),
+                speaker.skip_to(track_info.elapsed()),
+            )
+            .await?;
         }
 
-        if self.is_playing {
-            speaker.play().await?;
-        } else {
-            speaker.pause().await?;
+        match self.is_playing {
+            false => speaker.pause().await?,
+            true => speaker.play().await?,
         }
 
         Ok(())

@@ -2,15 +2,16 @@ use std::time::Duration;
 
 #[async_std::main]
 async fn main() -> Result<(), sonos::Error> {
-    let transport_uri = "http://192.168.2.91:8082/jakob/say_proxy/aHR0cHM6Ly90cmFuc2xhdGUuZ29vZ2xlLmNvbS90cmFuc2xhdGVfdHRzP2llPVVURi04JnE9a2VrJnRsPWRlJnRrPTY4OTU1MC43ODkwMDUmY2xpZW50PXdlYmFwcA==/kek.mp3";
-
+    let transport_uri = "http://192.168.2.91:1234/google_tts_proxy/aHR0cHM6Ly90cmFuc2xhdGUuZ29vZ2xlLmNvbS90cmFuc2xhdGVfdHRzP2llPVVURi04JnE9dGVzdCZ0bD1lbiZ0az02ODU5ODQuODQ5OTU1JmNsaWVudD13ZWJhcHA=/test.mp3";
     let speaker = sonos::find("jakob", Duration::from_secs(3)).await?.unwrap();
 
     let snapshot = speaker.snapshot().await?;
+    println!("{:#?}", snapshot);
 
-    speaker.set_volume(20).await?;
+    speaker.set_volume(10).await?;
     speaker.set_transport_uri(transport_uri, "").await?;
     speaker.play().await?;
+    async_std::task::sleep(Duration::from_secs(3)).await;
 
     speaker.apply(snapshot).await?;
 
