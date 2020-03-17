@@ -47,6 +47,10 @@ impl Speaker {
         Device::from_url(uri).await.map(Speaker::from_device)
     }
 
+    pub fn device(&self) -> &Device {
+        &self.0
+    }
+
     pub async fn name(&self) -> Result<String> {
         self.action(DEVICE_PROPERTIES, "GetZoneAttributes", "")
             .await?
