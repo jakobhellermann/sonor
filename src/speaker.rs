@@ -477,7 +477,7 @@ impl Speaker {
     }
 
     pub async fn snapshot(&self) -> Result<Snapshot> {
-        Snapshot::new(&self).await
+        Snapshot::from_speaker(&self).await
     }
 
     pub async fn apply(&self, snapshot: Snapshot) -> Result<()> {
