@@ -50,7 +50,7 @@ impl Snapshot {
             volume: Some(volume),
             track_info,
             is_playing: Some(is_playing),
-            transport_uri: Some(transport_uri),
+            transport_uri,
         })
     }
 

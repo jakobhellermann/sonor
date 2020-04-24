@@ -435,10 +435,12 @@ impl Speaker {
     }
 
     /// Get the current transport URI for the speaker.
-    pub async fn transport_uri(&self) -> Result<String> {
-        self.action(AV_TRANSPORT, "GetMediaInfo", DEFAULT_ARGS)
+    pub async fn transport_uri(&self) -> Result<Option<String>> {
+        let uri = self
+            .action(AV_TRANSPORT, "GetMediaInfo", DEFAULT_ARGS)
             .await?
-            .extract("CurrentURI")
+            .remove("CurrentURI");
+        Ok(uri)
     }
 
     #[allow(unused)]
