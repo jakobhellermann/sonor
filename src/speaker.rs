@@ -5,8 +5,8 @@ use crate::{
     RepeatMode, Result, Snapshot, SpeakerInfo,
 };
 use roxmltree::{Document, Node};
+use rupnp::{ssdp::URN, Device};
 use std::{collections::HashMap, net::Ipv4Addr};
-use upnp::{ssdp::URN, Device};
 
 pub(crate) const SONOS_URN: URN = URN::device("schemas-upnp-org", "ZonePlayer", 1);
 
@@ -86,7 +86,7 @@ impl Speaker {
         match res {
             Ok(_) => Ok(()),
             Err(err) => {
-                if let upnp::Error::UPnPError(err) = &err {
+                if let rupnp::Error::UPnPError(err) = &err {
                     // "transition not available", i.e. already paused
                     if err.err_code() == 701 {
                         return Ok(());
@@ -134,7 +134,7 @@ impl Speaker {
             "SHUFFLE_NOREPEAT" => Ok((RepeatMode::None, true)),
             "SHUFFLE" => Ok((RepeatMode::All, true)),
             "SHUFFLE_REPEAT_ONE" => Ok((RepeatMode::One, true)),
-            _ => Err(upnp::Error::invalid_response(
+            _ => Err(rupnp::Error::invalid_response(
                 crate::datatypes::ParseRepeatModeError,
             )),
         }
@@ -235,7 +235,7 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "GetVolume", args)
             .await?
             .extract("CurrentVolume")
-            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
+            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
     }
     pub async fn set_volume(&self, volume: u16) -> Result<()> {
         let args = args! { "InstanceID": 0, "Channel": "Master", "DesiredVolume": volume };
@@ -248,7 +248,7 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "SetRelativeVolume", args)
             .await?
             .extract("NewVolume")
-            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
+            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
     }
 
     pub async fn mute(&self) -> Result<bool> {
@@ -269,7 +269,7 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "GetBass", DEFAULT_ARGS)
             .await?
             .extract("CurrentBass")
-            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
+            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
     }
     pub async fn set_bass(&self, bass: i8) -> Result<()> {
         let args = args! { "InstanceID": 0, "DesiredBass": bass };
@@ -281,7 +281,7 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "GetTreble", DEFAULT_ARGS)
             .await?
             .extract("CurrentTreble")
-            .and_then(|x| x.parse().map_err(upnp::Error::invalid_response))
+            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
     }
     pub async fn set_treble(&self, treble: i8) -> Result<()> {
         self.action(
@@ -318,7 +318,7 @@ impl Speaker {
         Document::parse(&result)?
             .root()
             .first_element_child()
-            .ok_or_else(|| upnp::Error::ParseError("Queue Response contains no children"))?
+            .ok_or_else(|| rupnp::Error::ParseError("Queue Response contains no children"))?
             .children()
             .filter(roxmltree::Node::is_element)
             .map(Track::from_xml)
@@ -454,7 +454,7 @@ impl Speaker {
             .split(',')
             .map(|x| x.parse())
             .collect::<Result<_, _>>()
-            .map_err(upnp::Error::invalid_response)?;
+            .map_err(rupnp::Error::invalid_response)?;
 
         let document = Document::parse(&descriptor_list)?;
         let services = utils::find_root_node(&document, "Services", "DescriptorList")?
@@ -464,10 +464,10 @@ impl Speaker {
                 let name = utils::find_node_attribute(node, "Name")?;
                 let capabilities = utils::find_node_attribute(node, "Capabilities")?;
 
-                let id = id.parse().map_err(upnp::Error::invalid_response)?;
+                let id = id.parse().map_err(rupnp::Error::invalid_response)?;
                 let capabilities = capabilities
                     .parse()
-                    .map_err(upnp::Error::invalid_response)?;
+                    .map_err(rupnp::Error::invalid_response)?;
                 let s_type = id << (8 + 7);
                 Ok((name.to_lowercase(), (id, capabilities, s_type)))
             })

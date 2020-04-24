@@ -6,8 +6,8 @@ use futures_util::{
     pin_mut,
     stream::{FuturesUnordered, Stream, TryStreamExt},
 };
+use rupnp::Device;
 use std::time::Duration;
-use upnp::Device;
 
 // 1,408ms +/- 169ms for two devices in network
 /*pub(crate) async fn discover_simple(
@@ -46,7 +46,7 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
     // this method searches for devices, but when it finds the first one it
     // uses its `.zone_group_state` to find the other devices in the network.
 
-    let devices = upnp::discover(&SONOS_URN.into(), timeout).await?;
+    let devices = rupnp::discover(&SONOS_URN.into(), timeout).await?;
     pin_mut!(devices);
 
     let mut devices_iter = None;

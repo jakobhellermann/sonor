@@ -68,6 +68,6 @@ pub use snapshot::Snapshot;
 pub use speaker::Speaker;
 pub use track::{Track, TrackInfo};
 
-pub use upnp::{self, ssdp::URN, Error};
+pub use rupnp::{self, ssdp::URN, Error};
 
 type Result<T, E = Error> = std::result::Result<T, E>;

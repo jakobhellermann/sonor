@@ -109,10 +109,10 @@ impl Track {
         }
 
         let title = title.ok_or_else(|| {
-            upnp::Error::XmlMissingElement(node.tag_name().name().to_string(), "title".to_string())
+            rupnp::Error::XmlMissingElement(node.tag_name().name().to_string(), "title".to_string())
         })?;
         let res = res.ok_or_else(|| {
-            upnp::Error::XmlMissingElement(node.tag_name().name().to_string(), "res".to_string())
+            rupnp::Error::XmlMissingElement(node.tag_name().name().to_string(), "res".to_string())
         })?;
         let duration = res
             .attributes()
