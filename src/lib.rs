@@ -13,7 +13,7 @@
 //! ```rust,no_run
 //! # use futures::prelude::*;
 //! # use std::time::Duration;
-//! # async_std::task::block_on(async {
+//! # async fn f() -> Result<(), sonos::Error> {
 //! let speaker = sonos::find("your room name", Duration::from_secs(2)).await?
 //!     .expect("room exists");
 //!
@@ -28,8 +28,8 @@
 //!
 //! speaker.join("some other room").await?;
 //!
-//! # Ok::<_, sonos::Error>(())
-//! # });
+//! # Ok(())
+//! # };
 //! ```
 //! For a full list of actions implemented, look at the [Speaker](struct.Speaker.html) docs.
 //!
@@ -40,7 +40,7 @@
 //! # use futures::prelude::*;
 //! # use std::time::Duration;
 //! use sonos::URN;
-//! # async_std::task::block_on(async {
+//! # async fn f() -> Result<(), sonos::Error> {
 //! # let speaker = sonos::find("your room name", Duration::from_secs(2)).await?.expect("room exists");
 //!
 //! let service = URN::service("schemas-upnp-org", "GroupRenderingControl", 1);
@@ -51,8 +51,8 @@
 //!
 //! println!("{}", response["CurrentMute"]);
 //!
-//! # Ok::<_, sonos::Error>(())
-//! # });
+//! # Ok(())
+//! # };
 //! ```
 
 mod datatypes;
