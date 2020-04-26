@@ -3,7 +3,7 @@ use std::time::Duration;
 
 type Result<T, E = sonos::Error> = std::result::Result<T, E>;
 
-#[async_std::main]
+#[tokio::main]
 async fn main() -> Result<()> {
     let roomname = std::env::args()
         .nth(1)
