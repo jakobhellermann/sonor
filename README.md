@@ -26,9 +26,7 @@ It can be used like this:
 use sonos::URN;
 
 let service = URN::service("schemas-upnp-org", "GroupRenderingControl", 1);
-let args = sonos::args! {
-    "InstanceID": 0
-};
+let args = "<InstanceID>0</InstanceID>";
 let response = speaker.action(&service, "GetGroupMute", args).await?;
 
 println!("{}", response["CurrentMute"]);

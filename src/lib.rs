@@ -44,9 +44,7 @@
 //! # let speaker = sonos::find("your room name", Duration::from_secs(2)).await?.expect("room exists");
 //!
 //! let service = URN::service("schemas-upnp-org", "GroupRenderingControl", 1);
-//! let args = sonos::args! {
-//!     "InstanceID": 0
-//! };
+//! let args = "<InstanceID>0</InstanceID>";
 //! let response = speaker.action(&service, "GetGroupMute", args).await?;
 //!
 //! println!("{}", response["CurrentMute"]);
