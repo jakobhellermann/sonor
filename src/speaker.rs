@@ -85,15 +85,9 @@ impl Speaker {
         let res = self.action(AV_TRANSPORT, "Pause", DEFAULT_ARGS).await;
         match res {
             Ok(_) => Ok(()),
-            Err(err) => {
-                if let rupnp::Error::UPnPError(err) = &err {
-                    // "transition not available", i.e. already paused
-                    if err.err_code() == 701 {
-                        return Ok(());
-                    }
-                }
-                Err(err)
-            }
+            Err(rupnp::Error::HttpErrorCode(code)) if code.as_u16() == 500 => Ok(()),
+            Err(rupnp::Error::UPnPError(err)) if err.err_code() == 701 => Ok(()),
+            Err(err) => Err(err),
         }
     }
     pub async fn next(&self) -> Result<()> {
