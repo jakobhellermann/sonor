@@ -2,10 +2,7 @@ use crate::{
     speaker::{Speaker, SONOS_URN},
     Result,
 };
-use futures_util::{
-    pin_mut,
-    stream::{FuturesUnordered, Stream, TryStreamExt},
-};
+use futures_util::stream::{FuturesUnordered, Stream, TryStreamExt};
 use rupnp::Device;
 use std::time::Duration;
 
@@ -23,8 +20,6 @@ use std::time::Duration;
 
 // 292ms +/- 191ms for two devices in network
 /// Discover sonos players on the network.
-/// The ergonomics will get nicer when there are `for await`-loops in rust, but until then we have
-/// to use `pin_mut` or the `futures-async-stream`-crate.
 ///
 /// # Example Usage
 ///
@@ -32,9 +27,8 @@ use std::time::Duration;
 /// # use futures::prelude::*;
 /// # use std::time::Duration;
 /// # async fn f() -> Result<(), sonos::Error> {
-/// let devices = sonos::discover(Duration::from_secs(2)).await?;
+/// let mut devices = sonos::discover(Duration::from_secs(2)).await?;
 ///
-/// futures::pin_mut!(devices);
 /// while let Some(device) = devices.try_next().await? {
 ///     let name = device.name().await?;
 ///     println!("- {}", name);
@@ -46,7 +40,7 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
     // uses its `.zone_group_state` to find the other devices in the network.
 
     let devices = rupnp::discover(&SONOS_URN.into(), timeout).await?;
-    pin_mut!(devices);
+    futures_util::pin_mut!(devices);
 
     let mut devices_iter = None;
 
@@ -88,8 +82,7 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
 /// # Ok(())
 /// # };
 pub async fn find(roomname: &str, timeout: Duration) -> Result<Option<Speaker>> {
-    let devices = discover(timeout).await?;
-    pin_mut!(devices);
+    let mut devices = discover(timeout).await?;
 
     while let Some(device) = devices.try_next().await? {
         if device.name().await?.eq_ignore_ascii_case(roomname) {

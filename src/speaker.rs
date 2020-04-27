@@ -491,6 +491,7 @@ impl Speaker {
 
     /// Execute some UPnP Action on the device.
     /// Panics if the service is not actually available.
+    /// A list of services, devices and actions of the 'ZonePlayer:1' standard can be found [here](https://github.com/jakobhellermann/sonos/tree/master/zoneplayer).
     pub async fn action(
         &self,
         service: &URN,
