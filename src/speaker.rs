@@ -381,7 +381,7 @@ impl Speaker {
             .collect()
     }
 
-    /// Returns a map of all discovered devices in the network to their respective information
+    /// Returns all groups in the system as a map from the group coordinators UUID to a list of [Speaker Info](struct.SpeakerInfo.html)s.
     pub async fn zone_group_state(&self) -> Result<HashMap<String, Vec<SpeakerInfo>>> {
         Ok(self._zone_group_state().await?.into_iter().collect())
     }
@@ -478,10 +478,13 @@ impl Speaker {
         Ok((available_services, services))
     }
 
+    /// Take a snapshot of the state the speaker is in right now.
+    /// The saved information is the speakers volume, it's currently played song and were you were in the song.
     pub async fn snapshot(&self) -> Result<Snapshot> {
         Snapshot::from_speaker(&self).await
     }
 
+    /// Applies a snapshot previously taken by the [snapshot](struct.Speaker.html#method.snapshot)-method.
     pub async fn apply(&self, snapshot: Snapshot) -> Result<()> {
         snapshot.apply(&self).await
     }

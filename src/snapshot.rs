@@ -2,7 +2,8 @@ use crate::{track::TrackInfo, Result, Speaker};
 use futures_util::future::{try_join, try_join4};
 
 /// A Snapshot of the state the speaker is in right now.
-/// Useful for announcing some clip at a lower volume, then later resume where you left of.
+/// Useful for announcing some clip at a lower volume, then later resume where you left off.
+/// The struct is obtained by calling the [snapshot](struct.Speaker.html#method.snapshot)-method on a speaker and applied using [Speaker::apply](struct.Speaker.html#method.apply).
 #[derive(Debug, Default)]
 pub struct Snapshot {
     volume: Option<u16>,
@@ -14,25 +15,25 @@ pub struct Snapshot {
 
 impl Snapshot {
     /// Sets the volume of the snapshot
-    pub fn volume(&mut self, volume: u16) -> &mut Self {
+    pub fn set_volume(&mut self, volume: u16) -> &mut Self {
         self.volume = Some(volume);
         self
     }
 
     /// Sets whether the speaker is playing
-    pub fn is_playing(&mut self, is_playing: bool) -> &mut Self {
+    pub fn set_is_playing(&mut self, is_playing: bool) -> &mut Self {
         self.is_playing = Some(is_playing);
         self
     }
 
     /// Specifies the current track info
-    pub fn track_info(&mut self, track_info: TrackInfo) -> &mut Self {
+    pub fn set_track_info(&mut self, track_info: TrackInfo) -> &mut Self {
         self.track_info = Some(track_info);
         self
     }
 
     /// Specifies the current track info
-    pub fn transport_uri(&mut self, transport_uri: impl Into<String>) -> &mut Self {
+    pub fn set_transport_uri(&mut self, transport_uri: impl Into<String>) -> &mut Self {
         self.transport_uri = Some(transport_uri.into());
         self
     }
