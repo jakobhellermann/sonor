@@ -1,7 +1,8 @@
 [package]
 name = "sonor"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
+readme = "README.md"
 description = "a library for controlling sonos speakers"
 repository = "https://github.com/jjakobh/upnp"
 categories = ["network-programming", "asynchronous"]
