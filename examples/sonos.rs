@@ -1,7 +1,7 @@
-use sonos::Speaker;
+use sonor::Speaker;
 use std::time::Duration;
 
-type Result<T, E = sonos::Error> = std::result::Result<T, E>;
+type Result<T, E = sonor::Error> = std::result::Result<T, E>;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -9,7 +9,7 @@ async fn main() -> Result<()> {
         .nth(1)
         .expect("expected room name as first argument");
 
-    let speaker = sonos::find(&roomname, Duration::from_secs(3))
+    let speaker = sonor::find(&roomname, Duration::from_secs(3))
         .await?
         .unwrap_or_else(|| panic!("speaker '{}' doesn't exist", roomname));
 

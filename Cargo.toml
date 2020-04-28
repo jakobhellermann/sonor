@@ -1,5 +1,8 @@
 [package]
-name = "sonos"
+name = "sonor"
+description = "a library for controlling sonos speakers"
+categories = ["network-programming", "asynchronous"]
+keywords = ["sonos", "async", "audio", "upnp"]
 version = "0.1.0"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 edition = "2018"

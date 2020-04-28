@@ -13,8 +13,8 @@
 //! ```rust,no_run
 //! # use futures::prelude::*;
 //! # use std::time::Duration;
-//! # async fn f() -> Result<(), sonos::Error> {
-//! let speaker = sonos::find("your room name", Duration::from_secs(2)).await?
+//! # async fn f() -> Result<(), sonor::Error> {
+//! let speaker = sonor::find("your room name", Duration::from_secs(2)).await?
 //!     .expect("room exists");
 //!
 //! println!("The volume is currently at {}", speaker.volume().await?);
@@ -39,9 +39,9 @@
 //! ```rust,no_run
 //! # use futures::prelude::*;
 //! # use std::time::Duration;
-//! use sonos::URN;
-//! # async fn f() -> Result<(), sonos::Error> {
-//! # let speaker = sonos::find("your room name", Duration::from_secs(2)).await?.expect("room exists");
+//! use sonor::URN;
+//! # async fn f() -> Result<(), sonor::Error> {
+//! # let speaker = sonor::find("your room name", Duration::from_secs(2)).await?.expect("room exists");
 //!
 //! let service = URN::service("schemas-upnp-org", "GroupRenderingControl", 1);
 //! let args = "<InstanceID>0</InstanceID>";

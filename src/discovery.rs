@@ -26,8 +26,8 @@ use std::time::Duration;
 /// ```rust,no_run
 /// # use futures::prelude::*;
 /// # use std::time::Duration;
-/// # async fn f() -> Result<(), sonos::Error> {
-/// let mut devices = sonos::discover(Duration::from_secs(2)).await?;
+/// # async fn f() -> Result<(), sonor::Error> {
+/// let mut devices = sonor::discover(Duration::from_secs(2)).await?;
 ///
 /// while let Some(device) = devices.try_next().await? {
 ///     let name = device.name().await?;
@@ -75,8 +75,8 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
 /// ```rust,no_run
 /// # use futures::prelude::*;
 /// # use std::time::Duration;
-/// # async fn f() -> Result<(), sonos::Error> {
-/// let speaker = sonos::find("your room name", Duration::from_secs(1)).await?
+/// # async fn f() -> Result<(), sonor::Error> {
+/// let speaker = sonor::find("your room name", Duration::from_secs(1)).await?
 ///     .expect("player exists");
 /// assert_eq!(speaker.name().await?, "yoor room name");
 /// # Ok(())

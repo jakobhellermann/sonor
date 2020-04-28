@@ -3,7 +3,7 @@ It operates asynchronously and aims for a simple to use yet powerful API.
 
 # Example
 ```rust
-let speaker = sonos::find("your room name", Duration::from_secs(2)).await?
+let speaker = sonor::find("your room name", Duration::from_secs(2)).await?
     .expect("room exists");
 
 println!("The volume is currently at {}", speaker.volume().await?);
@@ -23,7 +23,7 @@ If your use case isn't covered, this crate also exposes the raw UPnP Action API
 [here](struct.Speaker.html#method.action).
 It can be used like this:
 ```rust
-use sonos::URN;
+use sonor::URN;
 
 let service = URN::service("schemas-upnp-org", "GroupRenderingControl", 1);
 let args = "<InstanceID>0</InstanceID>";

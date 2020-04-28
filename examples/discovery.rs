@@ -2,8 +2,8 @@ use futures::prelude::*;
 use std::time::Duration;
 
 #[tokio::main]
-async fn main() -> Result<(), sonos::Error> {
-    let mut devices = sonos::discover(Duration::from_secs(2)).await?;
+async fn main() -> Result<(), sonor::Error> {
+    let mut devices = sonor::discover(Duration::from_secs(2)).await?;
 
     while let Some(device) = devices.try_next().await? {
         let name = device.name().await?;
