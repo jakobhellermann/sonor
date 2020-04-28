@@ -1,3 +1,6 @@
+![GitHub last commit](https://img.shields.io/github/last-commit/jakobhellermann/sonor.svg)
+[![Crates.io](https://img.shields.io/crates/v/sonor.svg)](https://crates.io/crates/sonor)
+
 This crate is a Sonos controller library written in Rust.
 It operates asynchronously and aims for a simple to use yet powerful API.
 

@@ -1,10 +1,12 @@
 [package]
 name = "sonor"
-description = "a library for controlling sonos speakers"
-categories = ["network-programming", "asynchronous"]
-keywords = ["sonos", "async", "audio", "upnp"]
 version = "0.1.0"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
+description = "a library for controlling sonos speakers"
+repository = "https://github.com/jjakobh/upnp"
+categories = ["network-programming", "asynchronous"]
+keywords = ["sonos", "async", "audio", "upnp"]
+license = "MIT"
 edition = "2018"
 
 [dependencies]
