@@ -421,6 +421,8 @@ impl Speaker {
     }
 
     /// Set the transport URI for the speaker.
+    /// Note that (at least my old Play:5 gen 1 speaker) will only accept urls without
+    /// '?foo=bar' query parameters that end with '.mp3' or '.wav' etc.
     pub async fn set_transport_uri(&self, uri: &str, metadata: &str) -> Result<()> {
         let args = args! { "InstanceID": 0, "CurrentURI": uri, "CurrentURIMetaData": metadata };
         self.action(AV_TRANSPORT, "SetAVTransportURI", args)
