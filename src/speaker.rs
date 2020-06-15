@@ -194,8 +194,8 @@ impl Speaker {
             .await?;
 
         let track_no: u32 = map.extract("Track")?.parse().unwrap();
-        let duration = map.extract("TrackDuration")?;
-        let elapsed = map.extract("RelTime")?;
+        let duration = map.extract("TrackDuration").unwrap_or_else(|_| "0:0:0".into());
+        let elapsed = map.extract("RelTime").unwrap_or_else(|_| "0:0:0".into());
 
         // e.g. speaker was playing spotify, then spotify disconnected but sonos is still on
         // "x-sonos-vli"
