@@ -44,7 +44,7 @@ async fn currently_playing(speaker: &Speaker) -> Result<()> {
         return Ok(());
     }
 
-    let queue = &speaker.queue().await?[1..];
+    let queue = &speaker.queue().await?;
 
     match queue.len() {
         0 => println!("There are no tracks coming after that."),
