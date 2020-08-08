@@ -1,6 +1,6 @@
 [package]
 name = "sonor"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 readme = "README.md"
 description = "a library for controlling sonos speakers"
@@ -14,7 +14,7 @@ edition = "2018"
 log = "0.4"
 rupnp = "0.1.1"
 futures-util = { version = "0.3", default-features = false, features = ["alloc"] }
-roxmltree = "0.11"
+roxmltree = "0.13"
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["macros", "time"] }

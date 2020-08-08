@@ -10,7 +10,7 @@ use std::time::Duration;
 /*pub(crate) async fn discover_simple(
     timeout: Duration,
 ) -> Result<impl Stream<Item = Result<Speaker>>> {
-    let stream = upnp::discover(&SONOS_URN.into(), timeout)
+    let stream = rupnp::discover(&SONOS_URN.into(), timeout)
         .await?
         .map_ok(Speaker::from_device)
         .map_ok(|device| device.expect("searched for sonos urn but got something else"));
