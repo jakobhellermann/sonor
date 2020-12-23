@@ -11,7 +11,7 @@ async fn main() -> Result<(), sonor::Error> {
     speaker.set_volume(10).await?;
     speaker.set_transport_uri(transport_uri, "").await?;
     speaker.play().await?;
-    tokio::time::delay_for(Duration::from_secs(3)).await;
+    tokio::time::sleep(Duration::from_secs(3)).await;
 
     speaker.apply(snapshot).await?;
 
