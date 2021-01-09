@@ -2,7 +2,7 @@ use crate::{
     args,
     track::{Track, TrackInfo},
     utils::{self, HashMapExt},
-    RepeatMode, Result, Snapshot, SpeakerInfo,
+    Error, RepeatMode, Result, Snapshot, SpeakerInfo,
 };
 use roxmltree::{Document, Node};
 use rupnp::{ssdp::URN, Device};
@@ -44,7 +44,7 @@ impl Speaker {
             .parse()
             .expect("is always valid");
 
-        Device::from_url(uri).await.map(Speaker::from_device)
+        Ok(Device::from_url(uri).await.map(Speaker::from_device)?)
     }
 
     pub fn device(&self) -> &Device {
@@ -85,8 +85,8 @@ impl Speaker {
         let res = self.action(AV_TRANSPORT, "Pause", DEFAULT_ARGS).await;
         match res {
             Ok(_) => Ok(()),
-            Err(rupnp::Error::HttpErrorCode(code)) if code.as_u16() == 500 => Ok(()),
-            Err(rupnp::Error::UPnPError(err)) if err.err_code() == 701 => Ok(()),
+            Err(Error::UPnP(rupnp::Error::HttpErrorCode(code))) if code.as_u16() == 500 => Ok(()),
+            Err(Error::UPnP(rupnp::Error::UPnPError(err))) if err.err_code() == 701 => Ok(()),
             Err(err) => Err(err),
         }
     }
@@ -128,9 +128,9 @@ impl Speaker {
             "SHUFFLE_NOREPEAT" => Ok((RepeatMode::None, true)),
             "SHUFFLE" => Ok((RepeatMode::All, true)),
             "SHUFFLE_REPEAT_ONE" => Ok((RepeatMode::One, true)),
-            _ => Err(rupnp::Error::invalid_response(
+            _ => Err(Error::UPnP(rupnp::Error::invalid_response(
                 crate::datatypes::ParseRepeatModeError,
-            )),
+            ))),
         }
     }
     pub async fn repeat_mode(&self) -> Result<RepeatMode> {
@@ -231,7 +231,10 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "GetVolume", args)
             .await?
             .extract("CurrentVolume")
-            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
+            .and_then(|x| {
+                x.parse()
+                    .map_err(|e| rupnp::Error::invalid_response(e).into())
+            })
     }
     pub async fn set_volume(&self, volume: u16) -> Result<()> {
         let args = args! { "InstanceID": 0, "Channel": "Master", "DesiredVolume": volume };
@@ -244,7 +247,10 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "SetRelativeVolume", args)
             .await?
             .extract("NewVolume")
-            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
+            .and_then(|x| {
+                x.parse()
+                    .map_err(|e| rupnp::Error::invalid_response(e).into())
+            })
     }
 
     pub async fn mute(&self) -> Result<bool> {
@@ -265,7 +271,10 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "GetBass", DEFAULT_ARGS)
             .await?
             .extract("CurrentBass")
-            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
+            .and_then(|x| {
+                x.parse()
+                    .map_err(|e| rupnp::Error::invalid_response(e).into())
+            })
     }
     pub async fn set_bass(&self, bass: i8) -> Result<()> {
         let args = args! { "InstanceID": 0, "DesiredBass": bass };
@@ -277,7 +286,10 @@ impl Speaker {
         self.action(RENDERING_CONTROL, "GetTreble", DEFAULT_ARGS)
             .await?
             .extract("CurrentTreble")
-            .and_then(|x| x.parse().map_err(rupnp::Error::invalid_response))
+            .and_then(|x| {
+                x.parse()
+                    .map_err(|e| rupnp::Error::invalid_response(e).into())
+            })
     }
     pub async fn set_treble(&self, treble: i8) -> Result<()> {
         self.action(
@@ -496,10 +508,11 @@ impl Speaker {
         action: &str,
         payload: &str,
     ) -> Result<HashMap<String, String>> {
-        self.0
+        Ok(self
+            .0
             .find_service(service)
             .unwrap_or_else(|| panic!(format!("expected service '{}'", service)))
             .action(self.0.url(), action, payload)
-            .await
+            .await?)
     }
 }

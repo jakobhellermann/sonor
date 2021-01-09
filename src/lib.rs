@@ -62,10 +62,24 @@ mod utils;
 
 pub use datatypes::{RepeatMode, SpeakerInfo};
 pub use discovery::{discover, find};
+pub use rupnp::{self, ssdp::URN};
 pub use snapshot::Snapshot;
 pub use speaker::Speaker;
+use thiserror::*;
 pub use track::{Track, TrackInfo};
 
-pub use rupnp::{self, ssdp::URN, Error};
+/// Represents an error encountered by Sonor
+#[derive(Error, Debug)]
+pub enum Error {
+    /// Errors sourced from the rupnp crate
+    #[error(transparent)]
+    UPnP(#[from] rupnp::Error),
+    /// Errors sourced from XML parsing
+    #[error(transparent)]
+    Xml(#[from] roxmltree::Error),
+    /// Errors source from URI manipulation
+    #[error(transparent)]
+    InvalidUri(#[from] http::uri::InvalidUri),
+}
 
 type Result<T, E = Error> = std::result::Result<T, E>;
