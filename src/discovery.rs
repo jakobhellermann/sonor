@@ -1,6 +1,6 @@
 use crate::{
     speaker::{Speaker, SONOS_URN},
-    Result,
+    Error, Result,
 };
 use futures_util::stream::{FuturesUnordered, Stream, TryStreamExt};
 use rupnp::Device;
@@ -46,7 +46,7 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
 
     if let Some(device) = devices.try_next().await? {
         let iter = Speaker::from_device(device)
-            .expect("searched for sonos urn but got something else")
+            .ok_or(Error::NonSonosDevicesInSonosUPnPDiscovery)?
             ._zone_group_state()
             .await?
             .into_iter()
@@ -56,7 +56,7 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
                 async {
                     let device = Device::from_url(url?).await?;
                     let speaker = Speaker::from_device(device);
-                    Ok(speaker.expect("sonos action 'GetZoneGroupState' return non-sonos devices"))
+                    speaker.ok_or(Error::GetZoneGroupStateReturnedNonSonos)
                 }
             });
         devices_iter = Some(iter);

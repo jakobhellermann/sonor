@@ -80,6 +80,28 @@ pub enum Error {
     /// Errors source from URI manipulation
     #[error(transparent)]
     InvalidUri(#[from] http::uri::InvalidUri),
+    /// This error is produced when attempting to perform an action and
+    /// the specified service is not present.
+    #[error("Service {service} was not found when performing {action} with {payload}")]
+    MissingServiceForUPnPAction {
+        /// The required service for the action
+        service: URN,
+        /// The action to be performed
+        action: String,
+        /// The action payload
+        payload: String,
+    },
+    /// An impossible? situation where a speaker isn't included
+    /// in its own zone group state
+    #[error("asked for zone group state but the speaker doesn't seem to be included there")]
+    SpeakerNotIncludedInOwnZoneGroupState,
+    /// An impossible? situation where GetZoneGroupState returned non-Sonos devices
+    #[error("The Sonos-specific GetZoneGroupState action returned non-Sonos devices")]
+    GetZoneGroupStateReturnedNonSonos,
+    /// An impossible? situation where non-Sonos devices responded
+    /// to UPnP discovery for Sono devices
+    #[error("UPnP discovery for Sonos devices returned non-Sonos devices")]
+    NonSonosDevicesInSonosUPnPDiscovery,
 }
 
 type Result<T, E = Error> = std::result::Result<T, E>;
