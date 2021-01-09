@@ -21,7 +21,7 @@ pub trait HashMapExt {
 impl HashMapExt for std::collections::HashMap<String, String> {
     fn extract(&mut self, key: &str) -> Result<String> {
         self.remove(key).ok_or_else(|| {
-            rupnp::Error::XmlMissingElement("UPnP Response".to_string(), key.to_string())
+            rupnp::Error::XmlMissingElement("UPnP Response".to_string(), key.to_string()).into()
         })
     }
 }
@@ -46,14 +46,14 @@ pub fn seconds_from_str(s: &str) -> Result<u32> {
         Some(hours * 3600 + minutes * 60 + seconds)
     })();
 
-    opt.ok_or(rupnp::Error::ParseError("invalid duration"))
+    opt.ok_or(rupnp::Error::ParseError("invalid duration").into())
 }
 
 pub fn parse_bool(s: String) -> Result<bool> {
     match s.trim() {
         "0" => Ok(false),
         "1" => Ok(true),
-        _ => Err(rupnp::Error::ParseError("bool was neither `0` nor `1`")),
+        _ => Err(rupnp::Error::ParseError("bool was neither `0` nor `1`").into()),
     }
 }
 
@@ -64,6 +64,7 @@ pub fn find_node_attribute<'n, 'd: 'n>(node: Node<'d, 'n>, attr: &str) -> Result
         .map(Attribute::value)
         .ok_or_else(|| {
             rupnp::Error::XmlMissingElement(node.tag_name().name().to_string(), attr.to_string())
+                .into()
         })
 }
 
@@ -76,5 +77,7 @@ pub fn find_root_node<'a, 'input: 'a>(
         .descendants()
         .filter(roxmltree::Node::is_element)
         .find(|n| n.tag_name().name().eq_ignore_ascii_case(element))
-        .ok_or_else(|| rupnp::Error::XmlMissingElement(docname.to_string(), element.to_string()))
+        .ok_or_else(|| {
+            rupnp::Error::XmlMissingElement(docname.to_string(), element.to_string()).into()
+        })
 }
