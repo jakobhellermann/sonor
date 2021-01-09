@@ -66,8 +66,7 @@ impl Speaker {
             .find(|speaker_info| self.0.url() == speaker_info.location())
             .map(|speaker_info| speaker_info.uuid);
 
-        Ok(uuid
-            .expect("asked for zone group state but the speaker doesn't seem to be included there"))
+        uuid.ok_or(Error::SpeakerNotIncludedInOwnZoneGroupState)
     }
 
     // AV_TRANSPORT
@@ -500,7 +499,6 @@ impl Speaker {
     }
 
     /// Execute some UPnP Action on the device.
-    /// Panics if the service is not actually available.
     /// A list of services, devices and actions of the 'ZonePlayer:1' standard can be found [here](https://github.com/jakobhellermann/sonos/tree/master/zoneplayer).
     pub async fn action(
         &self,
@@ -511,7 +509,11 @@ impl Speaker {
         Ok(self
             .0
             .find_service(service)
-            .unwrap_or_else(|| panic!(format!("expected service '{}'", service)))
+            .ok_or_else(|| Error::MissingServiceForUPnPAction {
+                service: service.clone(),
+                action: action.to_string(),
+                payload: payload.to_string(),
+            })?
             .action(self.0.url(), action, payload)
             .await?)
     }
