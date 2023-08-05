@@ -1,5 +1,5 @@
 use crate::Result;
-use roxmltree::{Attribute, Document, Node};
+use roxmltree::{Document, Node};
 
 #[doc(hidden)]
 #[macro_export]
@@ -34,7 +34,7 @@ pub fn seconds_to_str(seconds_total: i64) -> String {
     let minutes = (seconds_total / 60) % 60;
     let hours = seconds_total / 3600;
 
-    return format!("{}{:02}:{:02}:{:02}", sign, hours, minutes, seconds);
+    format!("{}{:02}:{:02}:{:02}", sign, hours, minutes, seconds)
 }
 pub fn seconds_from_str(s: &str) -> Result<u32> {
     let opt = (|| {
@@ -59,9 +59,8 @@ pub fn parse_bool(s: String) -> Result<bool> {
 
 pub fn find_node_attribute<'n, 'd: 'n>(node: Node<'d, 'n>, attr: &str) -> Result<&'n str> {
     node.attributes()
-        .iter()
         .find(|a| a.name().eq_ignore_ascii_case(attr))
-        .map(Attribute::value)
+        .map(|attr| attr.value())
         .ok_or_else(|| {
             rupnp::Error::XmlMissingElement(node.tag_name().name().to_string(), attr.to_string())
                 .into()

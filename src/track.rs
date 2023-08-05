@@ -116,7 +116,6 @@ impl Track {
         })?;
         let duration = res
             .attributes()
-            .iter()
             .find(|a| a.name().eq_ignore_ascii_case("duration"))
             .map(|a| utils::seconds_from_str(a.value()))
             .transpose()?;

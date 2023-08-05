@@ -7,19 +7,15 @@ use std::{
 };
 
 /// This enum describes how Sonos repeats the current playlist.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum RepeatMode {
     /// The playlist doesn't get repeated.
+    #[default]
     None,
     /// Only one song gets played on and on.
     One,
     /// The whole playlist is repeated.
     All,
-}
-impl std::default::Default for RepeatMode {
-    fn default() -> Self {
-        RepeatMode::None
-    }
 }
 
 impl fmt::Display for RepeatMode {
