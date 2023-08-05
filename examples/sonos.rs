@@ -95,5 +95,5 @@ async fn group_state(speaker: &Speaker) -> Result<()> {
 }
 
 fn fmt_duration(secs: u32) -> String {
-    return format!("{:02}:{:02}", secs / 60, secs % 60);
+    format!("{:02}:{:02}", secs / 60, secs % 60)
 }
