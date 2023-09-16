@@ -1,6 +1,6 @@
 [package]
 name = "sonor"
-version = "1.1.0"
+version = "2.0.0"
 authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 readme = "README.md"
 description = "a library for controlling sonos speakers"
@@ -11,7 +11,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-rupnp = "1.0"
+rupnp = "2.0"
 futures-util = { version = "0.3", default-features = false, features = [
   "alloc",
 ] }
