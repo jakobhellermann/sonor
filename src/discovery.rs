@@ -39,7 +39,7 @@ pub async fn discover(timeout: Duration) -> Result<impl Stream<Item = Result<Spe
     // this method searches for devices, but when it finds the first one it
     // uses its `.zone_group_state` to find the other devices in the network.
 
-    let devices = rupnp::discover(&SONOS_URN.into(), timeout)
+    let devices = rupnp::discover(&SONOS_URN.into(), timeout, None)
         .await?
         .try_filter_map(|dev| async move { Ok(Speaker::from_device(dev)) });
     futures_util::pin_mut!(devices);

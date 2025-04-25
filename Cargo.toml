@@ -11,14 +11,14 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-rupnp = "2.0"
+rupnp = "3.0"
 futures-util = { version = "0.3", default-features = false, features = [
   "alloc",
 ] }
 log = "0.4"
-roxmltree = "0.18"
-thiserror = "1.0"
-http = "0.2"
+roxmltree = "0.20"
+thiserror = "2.0"
+http = "1.0"
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "time"] }
